@@ -1,0 +1,32 @@
+/* src/styles/index.css */
+
+/* Nulstil margin/padding og font */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Inter", sans-serif;
+}
+
+/* Body styling */
+body {
+  background-color: #f5f8fa;
+  color: #0f172a;
+  line-height: 1.6;
+}
+
+/* Knappens standard look */
+button {
+  cursor: pointer;
+}
+
+/* Input standard */
+input, select, textarea {
+  font-size: 15px;
+  outline: none;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}

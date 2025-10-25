@@ -1,17 +1,13 @@
-import CustomCard from './components/ui/CustomCard.jsx';
-
+import { BrowserRouter } from 'react-router-dom';
+import AppRoutes from './routes/index.jsx';
 
 function WebApp() {
 
   return (
-    <>
-      <h1>Welcome to the Compliance Web App</h1>
-      <CustomCard 
-      title="Click Me" 
-      onClick={() => alert("Button")} 
-    />
-    </>
-  )
+    <BrowserRouter>
+      <AppRoutes />
+    </BrowserRouter>
+  );
 }
 
 export default WebApp
