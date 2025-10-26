@@ -4,6 +4,7 @@ import AppLayout from '../components/ui/layout/AppLayout.jsx';
 import PublicLayout from '../components/ui/layout/PublicLayout.jsx';
 import ProtectedRoute from '../components/ui/protectedRoute.jsx';
 import ApprovalPage from '../screen/ApprovalPage.jsx';
+import CompanySetup from '../screen/Companysetup.jsx';
 import KontrolmalPage from '../screen/KontrolmalPage.jsx'; // ← renamed file
 import LoginPage from '../screen/LoginPage.jsx';
 import SignupPage from '../screen/signupPage.jsx'; // ← new import
@@ -19,6 +20,10 @@ export default function AppRoutes() {
 
       {/* Protected */}
       <Route element={<AppLayout />}>
+        <Route
+          path="/setup"
+          element={<ProtectedRoute><CompanySetup /></ProtectedRoute>}
+        />
         <Route
           path="/kontrolmal"
           element={<ProtectedRoute><KontrolmalPage /></ProtectedRoute>}
