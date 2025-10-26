@@ -1,17 +1,42 @@
-import CustomCard from './components/ui/CustomCard.jsx';
-
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './components/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
+import Login from './screen/Login';
+import Register from './screen/Register';
+import Dashboard from './screen/Dashboard';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 function WebApp() {
-
   return (
-    <>
-      <h1>Welcome to the Compliance Web App</h1>
-      <CustomCard 
-      title="Click Me" 
-      onClick={() => alert("Button")} 
-    />
-    </>
-  )
+    <AuthProvider>
+      <Router>
+        <div className="App">
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            
+            {/* Protected Routes */}
+            <Route 
+              path="/dashboard" 
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* Default Route */}
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            
+            {/* Catch all route */}
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </div>
+      </Router>
+    </AuthProvider>
+  );
 }
 
-export default WebApp
+export default WebApp;
