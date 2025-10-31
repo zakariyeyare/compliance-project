@@ -4,8 +4,6 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { adminSignIn, requestUserCode, verifyUserCode } from '../lib/auth.js';
 
-
-
 export default function LoginPage() {
   const [mode, setMode] = useState('user'); // 'user' | 'admin'
   const [email, setEmail] = useState('');

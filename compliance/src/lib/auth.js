@@ -1,53 +1,58 @@
 import supabase from './SupabaseClient.js';
 
-// SIGN UP (opret bruger)
-export async function signUp(email, password, fullName) {
-  // Opret auth-bruger
-  // trim og lowercase email
+// Selv-registrering er slået fra – brug admin backend til at oprette brugere
+export async function signUp() {
+  const err = new Error('Selv-registrering er deaktiveret. Kontakt administratoren.');
+  err.code = 'signup-disabled';
+  throw err;
+}
+
+// Brugerlogin (trin 1): send 6-cifret kode til e-mail
+export async function requestUserCode(email) {
   const e = email.trim().toLowerCase();
-  const n = fullName?.trim() ?? '';
-
-  console.log("Email sendes til Supabase:", e);
-
-  const { data, error } = await supabase.auth.signUp({ email: e, password, options: { data: { full_name: n } }});
+  const { error } = await supabase.auth.signInWithOtp({
+    email: e,
+    options: { shouldCreateUser: false }
+  });
   if (error) throw error;
+  return true;
+}
 
-  // email allerede i systemet
-  if (data?.user && data.user.identities.length === 0) {
-    const err = new Error("Denne e-mail findes allerede. Log ind i stedet.");
-    err.code = "email-already-in-use";
+// Brugerlogin (trin 2): verificér 6-cifret kode
+export async function verifyUserCode(email, code) {
+  const e = email.trim().toLowerCase();
+  const token = String(code).trim();
+  if (token.length !== 6) {
+    const err = new Error('Koden skal være 6 cifre.');
+    err.code = 'invalid-otp-length';
     throw err;
   }
 
-  // Opdater profil (trigger opretter profiles-række automatisk)
-  const userId = data.user?.id;
-  if (userId && fullName) {
-    const { error: upErr } = await supabase
-      .from('profiles')
-      .update({ full_name: fullName })
-      .eq('id', userId);
-    if (upErr) throw upErr;
-  }
-
-  return data;
+  const { data, error } = await supabase.auth.verifyOtp({
+    email: e,
+    token,
+    type: 'email'
+  });
+  if (error) throw error;
+  return data.user ?? null;
 }
 
-// sign in
-export async function signIn(email, password) {
-    const e = email.trim().toLowerCase();
-    const { user, error } = await supabase.auth.signInWithPassword({ email: e, password });
-    if (error) throw error;
-    return user;
-    }
+// Admin-login (email + password)
+export async function adminSignIn(email, password) {
+  const e = email.trim().toLowerCase();
+  const { data, error } = await supabase.auth.signInWithPassword({ email: e, password });
+  if (error) throw error;
+  return data.user ?? null;
+}
 
-// sign out
+// Log ud
 export async function signOut() {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
-    }
+  const { error } = await supabase.auth.signOut();
+  if (error) throw error;
+}
 
-// get current user (session)
+// Hent nuværende bruger
 export async function getCurrentUser() {
-    const { data: { user } } = await supabase.auth.getUser();
-    return user ?? null;
+  const { data: { user } } = await supabase.auth.getUser();
+  return user ?? null;
 }
