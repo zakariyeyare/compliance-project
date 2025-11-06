@@ -5,7 +5,9 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Login from './screen/Login';
 import Register from './screen/Register';
 import Dashboard from './screen/Dashboard';
+import ComplianceOversigt from './screen/ComplianceOversigt';
 import 'bootstrap/dist/css/bootstrap.min.css';
+
 
 function WebApp() {
   return (
@@ -23,6 +25,14 @@ function WebApp() {
               element={
                 <ProtectedRoute>
                   <Dashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/compliance-oversigt" 
+              element={
+                <ProtectedRoute>
+                  <ComplianceOversigt />
                 </ProtectedRoute>
               } 
             />
