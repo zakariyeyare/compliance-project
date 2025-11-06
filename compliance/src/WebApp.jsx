@@ -5,11 +5,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Login from './screen/Login';
 import Register from './screen/Register';
 import Dashboard from './screen/Dashboard';
-<<<<<<< HEAD
 import ComplianceOverview from './screen/ComplianceOverview';
-=======
-import ComplianceOversigt from './screen/ComplianceOversigt';
->>>>>>> 8846c5ccaf1fe7aa101a047e95407e84e280290c
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 
@@ -33,17 +29,10 @@ function WebApp() {
               } 
             />
             <Route 
-<<<<<<< HEAD
               path="/compliance-overview" 
               element={
                 <ProtectedRoute>
                   <ComplianceOverview />
-=======
-              path="/compliance-oversigt" 
-              element={
-                <ProtectedRoute>
-                  <ComplianceOversigt />
->>>>>>> 8846c5ccaf1fe7aa101a047e95407e84e280290c
                 </ProtectedRoute>
               } 
             />
