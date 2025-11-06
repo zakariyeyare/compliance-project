@@ -1,0 +1,288 @@
+.gdpr-dashboard {
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+/* Dashboard Header */
+.dashboard-header {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  padding: 2rem;
+  border-radius: 12px;
+  border: 1px solid #dee2e6;
+  margin-bottom: 2rem;
+}
+
+/* Dashboard Rows */
+.dashboard-row {
+  margin-bottom: 1.5rem;
+}
+
+.control-card {
+  border: 2px solid #e3f2fd;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.control-card:hover {
+  border-color: #2196f3;
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.15) !important;
+}
+
+/* Control Header Row */
+.control-header-row {
+  background: linear-gradient(135deg, #f1f3f4 0%, #e8eaf6 100%);
+  border-bottom: 2px solid #dee2e6;
+  padding: 1.5rem;
+  transition: all 0.2s ease;
+}
+
+.control-header-row:hover {
+  background: linear-gradient(135deg, #e8eaf6 0%, #c5cae9 100%);
+}
+
+.control-title-section h5 {
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+
+.control-definition {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #495057;
+  margin-bottom: 0;
+}
+
+/* Subcontrol Dashboard Rows */
+.subcontrol-dashboard-row {
+  transition: background-color 0.2s ease;
+}
+
+.subcontrol-dashboard-row:hover {
+  background-color: rgba(0, 123, 255, 0.02);
+}
+
+.min-height-120 {
+  min-height: 120px;
+}
+
+/* Dashboard Columns */
+.dashboard-column-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem;
+}
+
+.dashboard-column-header {
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-column-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Underkontrol Column */
+.underkontrol-column {
+  background: linear-gradient(135deg, #e8f5e8 0%, #f1f8e9 100%);
+  border-right: 2px solid #a5d6a7;
+}
+
+.underkontrol-column .dashboard-column-header h6 {
+  color: #2e7d32;
+}
+
+/* Aktivitet Column */
+.aktivitet-column {
+  background: linear-gradient(135deg, #fff3e0 0%, #fef7ed 100%);
+  border-right: 2px solid #ffcc80;
+}
+
+.aktivitet-column .dashboard-column-header h6 {
+  color: #ef6c00;
+}
+
+.activities-list {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.activity-item {
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  border-left: 4px solid #ff9800;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.activity-description {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #424242;
+}
+
+/* Politik Column */
+.politik-column {
+  background: linear-gradient(135deg, #e3f2fd 0%, #f0f8ff 100%);
+}
+
+.politik-column .dashboard-column-header h6 {
+  color: #1565c0;
+}
+
+.policy-textarea {
+  border: 2px solid #bbdefb;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  resize: vertical;
+  transition: border-color 0.2s ease;
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
+.policy-textarea:focus {
+  border-color: #2196f3;
+  box-shadow: 0 0 0 0.2rem rgba(33, 150, 243, 0.25);
+  background-color: #fff;
+}
+
+.policy-textarea:disabled {
+  background-color: #f5f5f5;
+  border-color: #ddd;
+  color: #666;
+}
+
+.save-btn {
+  font-size: 0.85rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.save-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Dividers */
+.subcontrol-divider {
+  margin: 0;
+  border-top: 1px solid #dee2e6;
+  opacity: 0.7;
+}
+
+/* Badges */
+.badge {
+  font-size: 0.8rem;
+  padding: 0.4rem 0.6rem;
+}
+
+.badge.fs-6 {
+  font-size: 0.9rem !important;
+  padding: 0.5rem 0.8rem;
+}
+
+/* Buttons */
+.btn-outline-success {
+  border-width: 2px;
+  font-weight: 500;
+}
+
+.btn-outline-success:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+}
+
+/* Icons */
+.fas {
+  opacity: 0.8;
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+  .underkontrol-column,
+  .aktivitet-column {
+    border-right: none;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+  }
+  
+  .min-height-120 {
+    min-height: auto;
+  }
+  
+  .dashboard-column-content {
+    padding: 1rem;
+  }
+  
+  .control-header-row {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .gdpr-dashboard {
+    padding: 0 0.5rem;
+  }
+  
+  .dashboard-header {
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .dashboard-column-content {
+    padding: 0.75rem;
+  }
+  
+  .control-definition {
+    font-size: 0.9rem;
+  }
+  
+  .control-title-section h5 {
+    font-size: 1rem;
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { 
+    opacity: 0; 
+    transform: translateY(20px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+.dashboard-row {
+  animation: fadeIn 0.4s ease-out;
+}
+
+/* Loading States */
+.spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* Alert Customizations */
+.alert {
+  border-radius: 8px;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.alert-warning {
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+  color: #856404;
+  border-left: 4px solid #ffc107;
+}
+
+.alert-info {
+  background: linear-gradient(135deg, #d1ecf1 0%, #b8daff 100%);
+  color: #0c5460;
+  border-left: 4px solid #17a2b8;
+}

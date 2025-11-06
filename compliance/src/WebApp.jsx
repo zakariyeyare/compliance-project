@@ -1,11 +1,11 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import { AuthProvider } from './components/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import Dashboard from './screen/Dashboard';
+import GDPRDashboard from './screen/GDPRDashboard';
 import Login from './screen/Login';
 import Register from './screen/Register';
-import Dashboard from './screen/Dashboard';
-import 'bootstrap/dist/css/bootstrap.min.css';
 
 function WebApp() {
   return (
@@ -23,6 +23,15 @@ function WebApp() {
               element={
                 <ProtectedRoute>
                   <Dashboard />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/gdpr-compliance" 
+              element={
+                <ProtectedRoute>
+                  <GDPRDashboard orgId={null} />
                 </ProtectedRoute>
               } 
             />

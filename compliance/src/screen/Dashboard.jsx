@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Navbar, Nav } from 'react-bootstrap';
+import { useEffect, useState } from 'react';
+import { Button, Card, Col, Container, Nav, Navbar, Row } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import Supabase from '../SupabaseClient';
 import CustomCard from '../components/ui/CustomCard';
@@ -29,6 +29,11 @@ function Dashboard() {
     }
   };
 
+  // Navigation handler for Choose Compliance
+  const handleChooseCompliance = () => {
+    navigate('/gdpr-compliance');
+  };
+
   if (loading) {
     return (
       <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
@@ -47,7 +52,9 @@ function Dashboard() {
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="me-auto">
               <Nav.Link href="#dashboard">Dashboard</Nav.Link>
-              <Nav.Link href="#compliance">Compliance</Nav.Link>
+              <Nav.Link onClick={handleChooseCompliance} style={{ cursor: 'pointer' }}>
+                Compliance
+              </Nav.Link>
             </Nav>
             <Nav className="ms-auto">
               <Nav.Item className="d-flex align-items-center me-3 text-light">
@@ -73,8 +80,8 @@ function Dashboard() {
         <Row>
           <Col md={4} className="mb-4">
             <CustomCard
-              title="Compliance Oversigt"
-              onClick={() => alert('Compliance oversigt clicked')}
+              title="Choose Compliance"
+              onClick={handleChooseCompliance}
             />
           </Col>
           <Col md={4} className="mb-4">
@@ -109,8 +116,9 @@ function Dashboard() {
               <Card.Body>
                 <Card.Title>Hurtige Handlinger</Card.Title>
                 <div className="d-grid gap-2">
-                  <Button variant="primary" onClick={() => alert('Ny compliance check')}>
-                    Start Ny Compliance Check
+                  <Button variant="primary" onClick={handleChooseCompliance}>
+                    <i className="fas fa-shield-alt me-2"></i>
+                    Start GDPR Compliance
                   </Button>
                   <Button variant="secondary" onClick={() => alert('Se rapporter')}>
                     Se Alle Rapporter
