@@ -73,20 +73,20 @@ function Dashboard() {
         <Row>
           <Col md={4} className="mb-4">
             <CustomCard
-              title="Compliance Oversigt"
-              onClick={() => alert('Compliance oversigt clicked')}
+              title="Choose Compliance"
+              onClick={() => navigate('/compliance-overview')}
             />
           </Col>
           <Col md={4} className="mb-4">
             <CustomCard
-              title="Rapporter"
-              onClick={() => alert('Rapporter clicked')}
+              title="Reports"
+              onClick={() => alert('Reports clicked')}
             />
           </Col>
           <Col md={4} className="mb-4">
             <CustomCard
-              title="Indstillinger"
-              onClick={() => alert('Indstillinger clicked')}
+              title="Settings"
+              onClick={() => alert('Settings clicked')}
             />
           </Col>
         </Row>
