@@ -1,29 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Alert, Badge } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 function ComplianceOverview() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Check hvis vi kommer fra GDPR Dashboard med specifikt kontrolmål
+  const [fromGDPR, setFromGDPR] = useState(false);
+  const [selectedControl, setSelectedControl] = useState(null);
+
+  useEffect(() => {
+    if (location.state?.fromGDPR && location.state?.selectedControl) {
+      setFromGDPR(true);
+      setSelectedControl(location.state.selectedControl);
+    }
+  }, [location]);
+
   // Mock data - i virkeligheden ville dette komme fra den forrige skærm/database
   const [selectedCompliance] = useState({
     A1: {
       selected: true,
       title: "Data Protection Impact Assessment (DPIA)",
-      userNote: "Vi har gennemført DPIA for alle nye projekter og dokumenteret risikovurderinger i vores compliance system."
+      userNote: "Vi har gennemført DPIA for alle nye projekter og dokumenteret risikovurderinger i vores compliance system.",
+      controlCode: "A.1"
     },
     A2: {
       selected: false,
       title: "Privacy Policy & Data Processing Records",
-      userNote: ""
+      userNote: "",
+      controlCode: "A.2"
     },
     A3: {
       selected: true,
       title: "Data Subject Rights & Consent Management", 
-      userNote: "Implementeret automatisk consent management system med mulighed for brugere at trække samtykke tilbage."
+      userNote: "Implementeret automatisk consent management system med mulighed for brugere at trække samtykke tilbage.",
+      controlCode: "A.3"
     }
   });
 
   const [approved, setApproved] = useState(false);
-  const navigate = useNavigate();
 
   const handleApprove = () => {
     setApproved(true);
@@ -34,7 +50,11 @@ function ComplianceOverview() {
   };
 
   const handleBack = () => {
-    navigate('/dashboard');
+    if (fromGDPR) {
+      navigate('/gdpr-compliance');
+    } else {
+      navigate('/dashboard');
+    }
   };
 
   const selectedItems = Object.entries(selectedCompliance).filter(([key, item]) => item.selected);
@@ -46,8 +66,19 @@ function ComplianceOverview() {
           {/* Header */}
           <div className="text-center mb-3">
             <h5 className="text-primary fw-bold mb-2">
-              Oversigt over dine implementerede compliance elementer
+              {fromGDPR && selectedControl ? 
+                `Implementering oversigt for Kontrolmål ${selectedControl}` :
+                'Oversigt over dine implementerede compliance elementer'
+              }
             </h5>
+            
+            {fromGDPR && (
+              <Alert variant="info" className="py-2 mb-3">
+                <small>
+                  <strong>📋 GDPR Compliance:</strong> Du ser nu implementeringen for det valgte kontrolmål fra GDPR Dashboard
+                </small>
+              </Alert>
+            )}
             
           </div>
 
@@ -132,7 +163,7 @@ function ComplianceOverview() {
                 onClick={handleBack}
                 disabled={approved}
               >
-                ← Tilbage til Dashboard
+                ← {fromGDPR ? 'Tilbage til GDPR Dashboard' : 'Tilbage til Dashboard'}
               </Button>
               
               <Button 

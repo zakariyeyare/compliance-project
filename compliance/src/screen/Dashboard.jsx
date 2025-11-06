@@ -10,13 +10,11 @@ function Dashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Get current user
     const getUser = async () => {
       const { data: { user } } = await Supabase.auth.getUser();
       setUser(user);
       setLoading(false);
     };
-
     getUser();
   }, []);
 
@@ -29,7 +27,6 @@ function Dashboard() {
     }
   };
 
-  // Navigation handler for Choose Compliance
   const handleChooseCompliance = () => {
     navigate('/gdpr-compliance');
   };
@@ -37,14 +34,13 @@ function Dashboard() {
   if (loading) {
     return (
       <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
-        <div>IndlÃ¦ser...</div>
+        <div>Indlæser...</div>
       </Container>
     );
   }
 
   return (
     <>
-      {/* Navigation Bar */}
       <Navbar bg="dark" variant="dark" expand="lg" className="mb-4">
         <Container>
           <Navbar.Brand href="#home">Compliance App</Navbar.Brand>
@@ -68,7 +64,6 @@ function Dashboard() {
         </Container>
       </Navbar>
 
-      {/* Main Content */}
       <Container>
         <Row className="mb-4">
           <Col>
@@ -81,11 +76,7 @@ function Dashboard() {
           <Col md={4} className="mb-4">
             <CustomCard
               title="Choose Compliance"
-<<<<<<< HEAD
               onClick={handleChooseCompliance}
-=======
-              onClick={() => navigate('/compliance-overview')}
->>>>>>> 26c1dc2b63a1bb34e62535f5509c49dfd0865c68
             />
           </Col>
           <Col md={4} className="mb-4">

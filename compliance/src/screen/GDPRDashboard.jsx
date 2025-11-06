@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'; // Tilføj React import
 import { Alert, Badge, Button, Card, Col, Container, Form, Row, Spinner } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 import gdprSupabaseService from '../components/gdbrSupabase';
 import '../styles/Gdpr.css';
 
@@ -10,6 +11,7 @@ const GDPRDashboard = ({ orgId }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState({});
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadGDPRData();
@@ -88,7 +90,13 @@ const GDPRDashboard = ({ orgId }) => {
   };
 
   const showImplementation = (controlCode) => {
-    alert(`Viser implementering for Kontrolmål ${controlCode}`);
+    // Navigér til compliance overview med det valgte kontrolmål
+    navigate('/compliance-overview', { 
+      state: { 
+        selectedControl: controlCode,
+        fromGDPR: true 
+      } 
+    });
   };
 
   if (loading) {
@@ -122,7 +130,18 @@ const GDPRDashboard = ({ orgId }) => {
       <div className="dashboard-header mb-4">
         <Row className="align-items-center">
           <Col md={8}>
-            <h2 className="text-primary mb-1">{gdprData?.title}</h2>
+            <div className="d-flex align-items-center mb-2">
+              <Button 
+                variant="outline-secondary" 
+                size="sm" 
+                onClick={() => navigate('/dashboard')}
+                className="me-3"
+              >
+                <i className="fas fa-arrow-left me-2"></i>
+                Tilbage til Dashboard
+              </Button>
+              <h2 className="text-primary mb-0">{gdprData?.title}</h2>
+            </div>
             <p className="text-muted mb-0">
               Standard: <strong>{gdprData?.code}</strong> | 
               Kontrolmål: <strong>{gdprData?.controls?.length || 0}</strong>
