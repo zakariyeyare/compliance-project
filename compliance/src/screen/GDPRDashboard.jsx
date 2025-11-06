@@ -1,20 +1,28 @@
 import { useEffect, useState } from 'react'; // Tilføj React import
 import { Alert, Badge, Button, Card, Col, Container, Form, Row, Spinner } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
 import gdprSupabaseService from '../components/gdbrSupabase';
 import '../styles/Gdpr.css';
 
-const GDPRDashboard = ({ orgId }) => {
+const GDPRDashboard = ({ orgId = 1 }) => { // Default til orgId 1
   const [gdprData, setGdprData] = useState(null);
   const [expandedControls, setExpandedControls] = useState({});
-  const [workingPolicies, setWorkingPolicies] = useState({});
+  const [workingPolicies, setWorkingPolicies] = useState({}); // Tekst der redigeres
+  const [savedPolicies, setSavedPolicies] = useState({}); // Tekst der er gemt
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState({});
-  const navigate = useNavigate();
+  const [saveMode, setSaveMode] = useState('local'); // 'local' eller 'database'
 
   useEffect(() => {
     loadGDPRData();
+    // Forsøg at indlæse gemte policies fra localStorage
+    const savedPoliciesData = localStorage.getItem('gdpr_saved_policies');
+    if (savedPoliciesData) {
+      const parsed = JSON.parse(savedPoliciesData);
+      setSavedPolicies(parsed);
+      setWorkingPolicies(parsed); // Start med samme data i redigeringsfeltet
+    }
+    
     if (orgId) {
       loadWorkingPolicies();
     }
@@ -47,6 +55,7 @@ const GDPRDashboard = ({ orgId }) => {
       setWorkingPolicies(policiesMap);
     } catch (err) {
       console.error('Error loading policies:', err);
+      setWorkingPolicies({});
     }
   };
 
@@ -65,38 +74,61 @@ const GDPRDashboard = ({ orgId }) => {
   };
 
   const savePolicyContent = async (subcontrolId, ordinal) => {
-    if (!orgId) {
-      alert('Vælg venligst en organisation først');
-      return;
-    }
-    
     try {
       setSaving(prev => ({ ...prev, [subcontrolId]: true }));
-      await gdprSupabaseService.upsertWorkingPolicy(
-        orgId,
-        subcontrolId,
-        workingPolicies[subcontrolId] || '',
-        ordinal
-      );
       
-      setTimeout(() => {
-        setSaving(prev => ({ ...prev, [subcontrolId]: false }));
-      }, 1000);
+      const contentToSave = workingPolicies[subcontrolId] || '';
+      
+      if (saveMode === 'local') {
+        // Gem lokalt i browseren
+        const updatedSavedPolicies = {
+          ...savedPolicies,
+          [subcontrolId]: contentToSave
+        };
+        localStorage.setItem('gdpr_saved_policies', JSON.stringify(updatedSavedPolicies));
+        setSavedPolicies(updatedSavedPolicies);
+        
+        setTimeout(() => {
+          setSaving(prev => ({ ...prev, [subcontrolId]: false }));
+        }, 800);
+      } else {
+        // Forsøg at gemme i database
+        await gdprSupabaseService.upsertWorkingPolicy(
+          orgId,
+          subcontrolId,
+          contentToSave,
+          ordinal
+        );
+        
+        setSavedPolicies(prev => ({
+          ...prev,
+          [subcontrolId]: contentToSave
+        }));
+        
+        setTimeout(() => {
+          setSaving(prev => ({ ...prev, [subcontrolId]: false }));
+        }, 1500);
+      }
       
     } catch (err) {
-      alert('Fejl ved gemning: ' + err.message);
+      console.error('Fejl ved gemning:', err);
+      
+      // Fallback til lokal gemning hvis database fejler
+      const updatedSavedPolicies = {
+        ...savedPolicies,
+        [subcontrolId]: workingPolicies[subcontrolId] || ''
+      };
+      localStorage.setItem('gdpr_saved_policies', JSON.stringify(updatedSavedPolicies));
+      setSavedPolicies(updatedSavedPolicies);
+      setSaveMode('local');
+      
+      alert('Database fejl - dine ændringer gemmes lokalt i browseren. Kontakt administrator for at fikse database problemet.');
       setSaving(prev => ({ ...prev, [subcontrolId]: false }));
     }
   };
 
   const showImplementation = (controlCode) => {
-    // Navigér til compliance overview med det valgte kontrolmål
-    navigate('/compliance-overview', { 
-      state: { 
-        selectedControl: controlCode,
-        fromGDPR: true 
-      } 
-    });
+    alert(`Viser implementering for Kontrolmål ${controlCode}`);
   };
 
   if (loading) {
@@ -130,18 +162,7 @@ const GDPRDashboard = ({ orgId }) => {
       <div className="dashboard-header mb-4">
         <Row className="align-items-center">
           <Col md={8}>
-            <div className="d-flex align-items-center mb-2">
-              <Button 
-                variant="outline-secondary" 
-                size="sm" 
-                onClick={() => navigate('/dashboard')}
-                className="me-3"
-              >
-                <i className="fas fa-arrow-left me-2"></i>
-                Tilbage til Dashboard
-              </Button>
-              <h2 className="text-primary mb-0">{gdprData?.title}</h2>
-            </div>
+            <h2 className="text-primary mb-1">{gdprData?.title}</h2>
             <p className="text-muted mb-0">
               Standard: <strong>{gdprData?.code}</strong> | 
               Kontrolmål: <strong>{gdprData?.controls?.length || 0}</strong>
@@ -154,11 +175,7 @@ const GDPRDashboard = ({ orgId }) => {
           </Col>
         </Row>
         
-        {!orgId && (
-          <Alert variant="warning" className="mt-3">
-            <strong>Bemærk:</strong> Du skal vælge en organisation for at kunne redigere og gemme politikker.
-          </Alert>
-        )}
+
       </div>
 
       {/* Dashboard Rows */}
@@ -274,38 +291,53 @@ const GDPRDashboard = ({ orgId }) => {
                                 placeholder="Skriv politik / bevis..."
                                 value={workingPolicies[subcontrol.id] || ''}
                                 onChange={(e) => handlePolicyChange(subcontrol.id, e.target.value)}
-                                disabled={!orgId}
                                 className="policy-textarea"
                               />
-                              {orgId && (
-                                <div className="mt-2">
-                                  <Button
-                                    variant={saving[subcontrol.id] ? 'success' : 'primary'}
-                                    size="sm"
-                                    onClick={() => savePolicyContent(subcontrol.id, subIdx + 1)}
-                                    disabled={saving[subcontrol.id]}
-                                    className="save-btn"
-                                  >
-                                    {saving[subcontrol.id] ? (
-                                      <>
-                                        <Spinner
-                                          as="span"
-                                          animation="border"
-                                          size="sm"
-                                          role="status"
-                                          className="me-2"
-                                        />
-                                        Gemmer...
-                                      </>
-                                    ) : (
-                                      <>
-                                        <i className="fas fa-save me-2"></i>
-                                        Gem
-                                      </>
-                                    )}
-                                  </Button>
-                                </div>
-                              )}
+                              <div className="mt-2">
+                                <Button
+                                  variant={saving[subcontrol.id] ? 'success' : 'primary'}
+                                  size="sm"
+                                  onClick={() => savePolicyContent(subcontrol.id, subIdx + 1)}
+                                  disabled={saving[subcontrol.id]}
+                                  className="save-btn"
+                                >
+                                  {saving[subcontrol.id] ? (
+                                    <>
+                                      <Spinner
+                                        as="span"
+                                        animation="border"
+                                        size="sm"
+                                        role="status"
+                                        className="me-2"
+                                      />
+                                      Gemmer...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <i className="fas fa-save me-2"></i>
+                                      Gem
+                                    </>
+                                  )}
+                                </Button>
+                                {saving[subcontrol.id] && (
+                                  <div className="mt-2">
+                                    <small className="text-success">
+                                      <i className="fas fa-check-circle me-1"></i>
+                                      Gemmer dine ændringer...
+                                    </small>
+                                  </div>
+                                )}
+                                {!saving[subcontrol.id] && savedPolicies[subcontrol.id] && (
+                                  <div className="mt-2 p-2 bg-light border rounded">
+                                    <small className="text-muted d-block mb-1">
+                                      <strong>Gemt:</strong>
+                                    </small>
+                                    <small className="text-dark">
+                                      {savedPolicies[subcontrol.id]}
+                                    </small>
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </Col>
