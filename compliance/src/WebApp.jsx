@@ -6,6 +6,13 @@ import Dashboard from './screen/Dashboard';
 import GDPRDashboard from './screen/GDPRDashboard';
 import Login from './screen/Login';
 import Register from './screen/Register';
+<<<<<<< HEAD
+=======
+import Dashboard from './screen/Dashboard';
+import ComplianceOverview from './screen/ComplianceOverview';
+import 'bootstrap/dist/css/bootstrap.min.css';
+>>>>>>> 26c1dc2b63a1bb34e62535f5509c49dfd0865c68
+
 
 function WebApp() {
   return (
@@ -23,6 +30,14 @@ function WebApp() {
               element={
                 <ProtectedRoute>
                   <Dashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/compliance-overview" 
+              element={
+                <ProtectedRoute>
+                  <ComplianceOverview />
                 </ProtectedRoute>
               } 
             />

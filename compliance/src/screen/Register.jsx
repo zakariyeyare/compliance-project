@@ -8,6 +8,7 @@ function Register() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [companyName, setCompanyName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -39,6 +40,7 @@ function Register() {
         options: {
           data: {
             full_name: fullName,
+            company_name: companyName,
           }
         }
       });
@@ -105,6 +107,20 @@ function Register() {
                     required
                     autoComplete="email"
                   />
+                </Form.Group>
+
+                <Form.Group className="mb-3">
+                  <Form.Label>Firma navn</Form.Label>
+                  <Form.Control
+                    type="text"
+                    placeholder="Indtast dit firmas navn (valgfrit)"
+                    value={companyName}
+                    onChange={(e) => setCompanyName(e.target.value)}
+                    autoComplete="organization"
+                  />
+                  <Form.Text className="text-muted">
+                    Hvis du opretter en konto for dit firma, kan du indtaste firmaets navn her.
+                  </Form.Text>
                 </Form.Group>
 
                 <Form.Group className="mb-3">
