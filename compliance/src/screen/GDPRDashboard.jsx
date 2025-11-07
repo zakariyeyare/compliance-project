@@ -1,17 +1,19 @@
-import { useEffect, useState } from 'react'; // Tilføj React import
+import { useEffect, useState } from 'react';
 import { Alert, Badge, Button, Card, Col, Container, Form, Row, Spinner } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom'; // Tilføj navigation
 import gdprSupabaseService from '../components/gdbrSupabase';
 import '../styles/Gdpr.css';
 
-const GDPRDashboard = ({ orgId = 1 }) => { // Default til orgId 1
+const GDPRDashboard = ({ orgId = 1 }) => {
+  const navigate = useNavigate(); // Navigation hook
   const [gdprData, setGdprData] = useState(null);
   const [expandedControls, setExpandedControls] = useState({});
-  const [workingPolicies, setWorkingPolicies] = useState({}); // Tekst der redigeres
-  const [savedPolicies, setSavedPolicies] = useState({}); // Tekst der er gemt
+  const [workingPolicies, setWorkingPolicies] = useState({});
+  const [savedPolicies, setSavedPolicies] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState({});
-  const [saveMode, setSaveMode] = useState('local'); // 'local' eller 'database'
+  const [saveMode, setSaveMode] = useState('local');
 
   useEffect(() => {
     loadGDPRData();
@@ -131,6 +133,30 @@ const GDPRDashboard = ({ orgId = 1 }) => { // Default til orgId 1
     alert(`Viser implementering for Kontrolmål ${controlCode}`);
   };
 
+  // Navigation til compliance oversigt
+  const goToComplianceOverview = () => {
+    navigate('/compliance-overview');
+  };
+
+  // Navigation tilbage til dashboard
+  const goBackToDashboard = () => {
+    navigate('/dashboard');
+  };
+
+  // Beregn antal gemte policies
+  const getSavedPoliciesCount = () => {
+    return Object.values(savedPolicies).filter(policy => policy && policy.trim() !== '').length;
+  };
+
+  // Beregn total antal subcontrols
+  const getTotalSubcontrolsCount = () => {
+    let total = 0;
+    gdprData?.controls?.forEach(control => {
+      total += control.subcontrols?.length || 0;
+    });
+    return total;
+  };
+
   if (loading) {
     return (
       <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
@@ -158,10 +184,20 @@ const GDPRDashboard = ({ orgId = 1 }) => { // Default til orgId 1
 
   return (
     <Container fluid className="gdpr-dashboard mt-4">
-      {/* Header */}
+      {/* Header med navigation */}
       <div className="dashboard-header mb-4">
         <Row className="align-items-center">
-          <Col md={8}>
+          <Col md={2}>
+            <Button 
+              variant="outline-secondary" 
+              onClick={goBackToDashboard}
+              className="mb-2 mb-md-0"
+            >
+              <i className="fas fa-arrow-left me-2"></i>
+              Tilbage
+            </Button>
+          </Col>
+          <Col md={6}>
             <h2 className="text-primary mb-1">{gdprData?.title}</h2>
             <p className="text-muted mb-0">
               Standard: <strong>{gdprData?.code}</strong> | 
@@ -174,8 +210,6 @@ const GDPRDashboard = ({ orgId = 1 }) => { // Default til orgId 1
             </Badge>
           </Col>
         </Row>
-        
-
       </div>
 
       {/* Dashboard Rows */}
@@ -361,6 +395,31 @@ const GDPRDashboard = ({ orgId = 1 }) => { // Default til orgId 1
           <p>Der blev ikke fundet nogen GDPR kontrolmål i databasen.</p>
         </Alert>
       )}
+
+      {/* Next knap til compliance oversigt */}
+      <div className="mt-5 mb-4">
+        <Card className="border-success">
+          <Card.Body className="text-center">
+            <h5 className="text-success mb-3">
+              <i className="fas fa-check-circle me-2"></i>
+              Færdig med at udfylde politikker?
+            </h5>
+            <p className="text-muted mb-3">
+              Du har udfyldt <strong>{getSavedPoliciesCount()}</strong> ud af <strong>{getTotalSubcontrolsCount()}</strong> politikker.
+              Se dit compliance oversigt og eksporter dine politikker.
+            </p>
+            <Button 
+              variant="success" 
+              size="lg" 
+              onClick={goToComplianceOverview}
+              className="px-5"
+            >
+              <i className="fas fa-arrow-right me-2"></i>
+              Næste: Se Compliance Oversigt
+            </Button>
+          </Card.Body>
+        </Card>
+      </div>
     </Container>
   );
 };

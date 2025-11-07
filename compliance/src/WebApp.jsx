@@ -2,12 +2,11 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import { AuthProvider } from './components/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import ComplianceOverview from './screen/ComplianceOverview'; // Brug denne
 import Dashboard from './screen/Dashboard';
 import GDPRDashboard from './screen/GDPRDashboard';
 import Login from './screen/Login';
 import Register from './screen/Register';
-import ComplianceOverview from './screen/ComplianceOverview';
-
 
 function WebApp() {
   return (
@@ -28,20 +27,21 @@ function WebApp() {
                 </ProtectedRoute>
               } 
             />
-            <Route 
-              path="/compliance-overview" 
-              element={
-                <ProtectedRoute>
-                  <ComplianceOverview />
-                </ProtectedRoute>
-              } 
-            />
             
             <Route 
               path="/gdpr-compliance" 
               element={
                 <ProtectedRoute>
-                  <GDPRDashboard orgId={null} />
+                  <GDPRDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/compliance-overview" 
+              element={
+                <ProtectedRoute>
+                  <ComplianceOverview />
                 </ProtectedRoute>
               } 
             />
