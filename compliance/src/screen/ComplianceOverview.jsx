@@ -8,12 +8,23 @@ function ComplianceOverview() {
   
   // Check hvis vi kommer fra GDPR Dashboard med specifikt kontrolmål
   const [fromGDPR, setFromGDPR] = useState(false);
+  const [fromReports, setFromReports] = useState(false);
   const [selectedControl, setSelectedControl] = useState(null);
+  const [controlTitle, setControlTitle] = useState('');
+  const [policies, setPolicies] = useState({});
+  const [savedPoliciesReport, setSavedPoliciesReport] = useState({});
+  const [detailedPoliciesReport, setDetailedPoliciesReport] = useState({});
 
   useEffect(() => {
     if (location.state?.fromGDPR && location.state?.selectedControl) {
       setFromGDPR(true);
       setSelectedControl(location.state.selectedControl);
+      setControlTitle(location.state?.controlTitle || '');
+      setPolicies(location.state?.policies || {});
+    } else if (location.state?.fromReports) {
+      setFromReports(true);
+      setSavedPoliciesReport(location.state?.savedPolicies || {});
+      setDetailedPoliciesReport(location.state?.detailedPolicies || {});
     }
   }, [location]);
 
@@ -68,6 +79,8 @@ function ComplianceOverview() {
             <h5 className="text-primary fw-bold mb-2">
               {fromGDPR && selectedControl ? 
                 `Implementering oversigt for Kontrolmål ${selectedControl}` :
+                fromReports ? 
+                'Oversigt over dine gemte rapporter og policies' :
                 'Oversigt over dine implementerede compliance elementer'
               }
             </h5>
@@ -76,6 +89,14 @@ function ComplianceOverview() {
               <Alert variant="info" className="py-2 mb-3">
                 <small>
                   <strong>📋 GDPR Compliance:</strong> Du ser nu implementeringen for det valgte kontrolmål fra GDPR Dashboard
+                </small>
+              </Alert>
+            )}
+
+            {fromReports && (
+              <Alert variant="primary" className="py-2 mb-3">
+                <small>
+                  <strong>📊 Rapport Oversigt:</strong> Her er alle de policies og noter du har gemt i systemet
                 </small>
               </Alert>
             )}
@@ -89,11 +110,98 @@ function ComplianceOverview() {
             </Alert>
           )}
 
-          {/* Compliance Overview - Kompakt layout */}
-          <Row className="g-3 mb-3">
-            {Object.entries(selectedCompliance)
-              .filter(([key, item]) => item.selected)
-              .map(([key, item]) => (
+          {/* GDPR Politik/Evidens visning */}
+          {fromGDPR && policies && Object.keys(policies).length > 0 && (
+            <div className="mb-4">
+              <h6 className="text-primary fw-bold mb-3">
+                📋 Politik / Evidens for Kontrolmål {selectedControl}
+              </h6>
+              <div className="bg-light p-3 rounded">
+                <p className="text-dark mb-3">
+                  <strong>Kontrolmål:</strong> {controlTitle}
+                </p>
+                
+                {Object.entries(policies).map(([subcontrolId, data]) => (
+                  <Card key={subcontrolId} className="mb-3 border-info">
+                    <Card.Body className="p-3">
+                      <Row>
+                        <Col md={3}>
+                          <Badge bg="info" className="mb-2">Underkontrol {data.code}</Badge>
+                          <p className="small text-muted mb-0">
+                            <strong>Aktivitet:</strong> {data.activity}
+                          </p>
+                        </Col>
+                        <Col md={9}>
+                          <h6 className="text-primary mb-2">Politik / Evidens:</h6>
+                          <div className="bg-white p-2 border rounded">
+                            <p className="mb-0 text-dark">{data.policy}</p>
+                          </div>
+                        </Col>
+                      </Row>
+                    </Card.Body>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Rapport visning af gemte policies */}
+          {fromReports && (
+            <div className="mb-4">
+              <h6 className="text-primary fw-bold mb-3">
+                📊 Gemte Policies og Noter
+              </h6>
+              
+              {Object.keys(savedPoliciesReport).length === 0 && Object.keys(detailedPoliciesReport).length === 0 ? (
+                <Alert variant="info" className="text-center">
+                  <h6>Ingen gemte policies fundet</h6>
+                  <p className="mb-0">Du har ikke gemt nogen policies endnu. Gå til GDPR Dashboard for at begynde at arbejde med compliance policies.</p>
+                </Alert>
+              ) : (
+                <div className="bg-light p-3 rounded">
+                  {Object.entries(savedPoliciesReport).map(([subcontrolId, policyData], index) => {
+                    // Check om det er den nye objekt struktur
+                    const isObjectData = typeof policyData === 'object' && policyData.content;
+                    const controlCode = isObjectData ? policyData.controlCode : `A.${index + 1}`;
+                    const content = isObjectData ? policyData.content : policyData;
+                    const title = isObjectData ? policyData.controlTitle : 'Kontrolmål';
+                    
+                    return (
+                      <Card key={subcontrolId} className="mb-3 border-primary">
+                        <Card.Body className="p-3">
+                          <Row>
+                            <Col md={2} className="text-center">
+                              <Badge bg="primary" className="fs-5 px-3 py-2">{controlCode}</Badge>
+                            </Col>
+                            <Col md={10}>
+                              <h6 className="text-primary mb-2">{title}</h6>
+                              <div className="bg-white p-3 border rounded">
+                                <p className="mb-0 text-dark">{content}</p>
+                              </div>
+                            </Col>
+                          </Row>
+                        </Card.Body>
+                      </Card>
+                    );
+                  })}
+                  
+                  <div className="mt-3 p-2 bg-info bg-opacity-10 border border-info rounded">
+                    <small className="text-info">
+                      <i className="fas fa-info-circle me-1"></i>
+                      <strong>Total antal policies:</strong> {Object.keys(savedPoliciesReport).length}
+                    </small>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Standard Compliance Overview - Kompakt layout (kun hvis ikke fra GDPR eller Reports) */}
+          {!fromGDPR && !fromReports && (
+            <Row className="g-3 mb-3">
+              {Object.entries(selectedCompliance)
+                .filter(([key, item]) => item.selected)
+                .map(([key, item]) => (
               <Col md={12} key={key}>
                 <Card className="border-success h-100">
                   <Card.Body className="p-3">
@@ -124,6 +232,7 @@ function ComplianceOverview() {
               </Col>
             ))}
           </Row>
+          )}
 
           {/* Summary Stats - Kompakt */}
           <Row className="g-2 mb-3">
