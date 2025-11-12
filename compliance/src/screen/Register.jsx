@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { Container, Row, Col, Card, Form, Button, Alert } from 'react-bootstrap';
-import { useNavigate, Link } from 'react-router-dom';
-import Supabase from '../SupabaseClient';
+import { useState } from 'react';
+import { Alert, Button, Card, Col, Container, Form, Row } from 'react-bootstrap';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../components/AuthContext';
 
 function Register() {
   const [email, setEmail] = useState('');
@@ -13,6 +13,7 @@ function Register() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const navigate = useNavigate();
+  const { signUp } = useAuth();
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -34,15 +35,9 @@ function Register() {
     }
 
     try {
-      const { data, error } = await Supabase.auth.signUp({
-        email: email,
-        password: password,
-        options: {
-          data: {
-            full_name: fullName,
-            company_name: companyName,
-          }
-        }
+      const { error } = await signUp(email, password, {
+        full_name: fullName,
+        company_name: companyName,
       });
 
       if (error) {

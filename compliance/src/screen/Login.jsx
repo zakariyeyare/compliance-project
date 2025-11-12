@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { Container, Row, Col, Card, Form, Button, Alert } from 'react-bootstrap';
-import { useNavigate, Link } from 'react-router-dom';
-import Supabase from '../SupabaseClient';
+import { useState } from 'react';
+import { Alert, Button, Card, Col, Container, Form, Row } from 'react-bootstrap';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../components/AuthContext';
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -9,6 +9,7 @@ function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { signIn } = useAuth();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -16,10 +17,7 @@ function Login() {
     setError('');
 
     try {
-      const { data, error } = await Supabase.auth.signInWithPassword({
-        email: email,
-        password: password,
-      });
+      const { error } = await signIn(email, password);
 
       if (error) {
         setError(error.message);

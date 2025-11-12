@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import Supabase from '../SupabaseClient';
 
 const AuthContext = createContext({});
@@ -66,6 +66,43 @@ export const AuthProvider = ({ children }) => {
     return { data, error };
   };
 
+  const createUserOrganization = async (orgName) => {
+    try {
+      const { data: userData } = await Supabase.auth.getUser();
+      
+      if (!userData?.user) {
+        throw new Error('User not authenticated');
+      }
+
+      // Create organization
+      const { data: orgData, error: orgError } = await Supabase
+        .from('organizations')
+        .insert({
+          name: orgName || 'My Organization',
+          created_by: userData.user.id
+        })
+        .select()
+        .single();
+
+      if (orgError) throw orgError;
+
+      // Add user as member
+      const { error: memberError } = await Supabase
+        .from('org_members')
+        .insert({
+          org_id: orgData.id,
+          user_id: userData.user.id,
+          role: 'admin'
+        });
+
+      if (memberError) throw memberError;
+
+      return { data: orgData, error: null };
+    } catch (error) {
+      return { data: null, error };
+    }
+  };
+
   const value = {
     user,
     loading,
@@ -73,6 +110,7 @@ export const AuthProvider = ({ children }) => {
     signIn,
     signOut,
     resetPassword,
+    createUserOrganization,
   };
 
   return (
