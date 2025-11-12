@@ -27,8 +27,43 @@ function Dashboard() {
     }
   };
 
-  const handleChooseCompliance = () => {
-    navigate('/gdpr-compliance');
+  const handleChooseCompliance = async () => {
+    try {
+      // Hent nuværende bruger
+      const { data: { user: currentUser } } = await Supabase.auth.getUser();
+      
+      if (!currentUser) {
+        alert('Bruger ikke logget ind');
+        return;
+      }
+
+      // Auto-gem virksomhed med default-navn "My Company"
+      const defaultCompanyName = 'My Company';
+
+      const { error } = await Supabase
+        .from('companies')
+        .insert([
+          {
+            user_id: currentUser.id,
+            company_name: defaultCompanyName,
+            compliance_standard: 'GDPR'
+          }
+        ])
+        .select();
+
+      if (error) {
+        console.error('Error saving company:', error);
+        // Hvis gemning fejler, navigér alligevel (måske allerede gemt tidligere)
+        console.warn('Continuing to GDPR despite company save error');
+      }
+
+      // Navigér til GDPR compliance
+      navigate('/gdpr-compliance');
+    } catch (err) {
+      console.error('Exception in handleChooseCompliance:', err);
+      // Navigér alligevel — fejlen skal ikke blokere flowet
+      navigate('/gdpr-compliance');
+    }
   };
 
   const handleViewReports = () => {

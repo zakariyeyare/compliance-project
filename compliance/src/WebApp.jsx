@@ -4,6 +4,7 @@ import { AuthProvider } from './components/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Dashboard from './screen/Dashboard';
 import GDPRDashboard from './screen/GDPRDashboard';
+import ErrorBoundary from './components/ErrorBoundary';
 import Login from './screen/Login';
 import Register from './screen/Register';
 import ComplianceOverview from './screen/ComplianceOverview';
@@ -18,6 +19,8 @@ function WebApp() {
             {/* Public Routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            {/* Quick debug route to verify routing/rendering */}
+            <Route path="/gdpr-test" element={<div style={{padding:40,textAlign:'center'}}><h2>GDPR test route — React renders OK</h2><p>Remove this when debugging is done.</p></div>} />
             
             {/* Protected Routes */}
             <Route 
@@ -41,7 +44,9 @@ function WebApp() {
               path="/gdpr-compliance" 
               element={
                 <ProtectedRoute>
-                  <GDPRDashboard orgId={null} />
+                  <ErrorBoundary>
+                    <GDPRDashboard orgId={null} />
+                  </ErrorBoundary>
                 </ProtectedRoute>
               } 
             />
