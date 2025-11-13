@@ -7,6 +7,7 @@ import GDPRDashboard from './screen/GDPRDashboard';
 import Login from './screen/Login';
 import Register from './screen/Register';
 import ComplianceOverview from './screen/ComplianceOverview';
+import Udskriv from './screen/Udskriv';
 
 
 function WebApp() {
@@ -18,6 +19,7 @@ function WebApp() {
             {/* Public Routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/udskriv" element={<Udskriv />} />
             
             {/* Protected Routes */}
             <Route 
@@ -47,10 +49,10 @@ function WebApp() {
             />
             
             {/* Default Route */}
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/" element={<Navigate to="/udskriv" replace />} />
             
             {/* Catch all route */}
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            <Route path="*" element={<Navigate to="/udskriv" replace />} />
           </Routes>
         </div>
       </Router>
