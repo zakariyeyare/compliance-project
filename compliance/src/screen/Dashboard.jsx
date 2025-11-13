@@ -34,7 +34,7 @@ function Dashboard() {
   if (loading) {
     return (
       <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
-        <div>Indlæser...</div>
+        <div>Indlï¿½ser...</div>
       </Container>
     );
   }
@@ -81,8 +81,8 @@ function Dashboard() {
           </Col>
           <Col md={4} className="mb-4">
             <CustomCard
-              title="Reports"
-              onClick={() => alert('Reports clicked')}
+              title="Alle Rapporter"
+              onClick={() => navigate('/reports')}
             />
           </Col>
           <Col md={4} className="mb-4">
@@ -115,7 +115,7 @@ function Dashboard() {
                     <i className="fas fa-shield-alt me-2"></i>
                     Start GDPR Compliance
                   </Button>
-                  <Button variant="secondary" onClick={() => alert('Se rapporter')}>
+                  <Button variant="secondary" onClick={() => navigate('/reports')}>
                     Se Alle Rapporter
                   </Button>
                   <Button variant="info" onClick={() => alert('Eksporter data')}>

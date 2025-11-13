@@ -7,6 +7,7 @@ import Dashboard from './screen/Dashboard';
 import GDPRDashboard from './screen/GDPRDashboard';
 import Login from './screen/Login';
 import Register from './screen/Register';
+import Reports from './screen/Reports';
 
 function WebApp() {
   return (
@@ -42,6 +43,15 @@ function WebApp() {
               element={
                 <ProtectedRoute>
                   <ComplianceOverview />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/reports" 
+              element={
+                <ProtectedRoute>
+                  <Reports />
                 </ProtectedRoute>
               } 
             />

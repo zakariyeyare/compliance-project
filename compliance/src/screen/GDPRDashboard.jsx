@@ -152,7 +152,7 @@ const GDPRDashboard = ({ orgId = 1 }) => {
 
   // Beregn antal gemte policies
   const getSavedPoliciesCount = () => {
-    return Object.values(savedPolicies).filter(policy => policy && policy.trim() !== '').length;
+    return Object.values(savedPolicies).filter(policy => policy && typeof policy === 'string' && policy.trim() !== '').length;
   };
 
   // Slet en gemt politik
