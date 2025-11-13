@@ -81,6 +81,13 @@ const GDPRDashboard = ({ orgId = 1 }) => {
       
       const contentToSave = workingPolicies[subcontrolId] || '';
       
+      // Tjek om der er indhold at gemme
+      if (!contentToSave.trim()) {
+        alert('Kan ikke gemme en tom politik. Skriv noget indhold først.');
+        setSaving(prev => ({ ...prev, [subcontrolId]: false }));
+        return;
+      }
+      
       if (saveMode === 'local') {
         // Gem lokalt i browseren
         const updatedSavedPolicies = {
@@ -146,6 +153,19 @@ const GDPRDashboard = ({ orgId = 1 }) => {
   // Beregn antal gemte policies
   const getSavedPoliciesCount = () => {
     return Object.values(savedPolicies).filter(policy => policy && policy.trim() !== '').length;
+  };
+
+  // Slet en gemt politik
+  const deletePolicy = (subcontrolId) => {
+    const updatedSavedPolicies = { ...savedPolicies };
+    delete updatedSavedPolicies[subcontrolId];
+    
+    const updatedWorkingPolicies = { ...workingPolicies };
+    delete updatedWorkingPolicies[subcontrolId];
+    
+    localStorage.setItem('gdpr_saved_policies', JSON.stringify(updatedSavedPolicies));
+    setSavedPolicies(updatedSavedPolicies);
+    setWorkingPolicies(updatedWorkingPolicies);
   };
 
   // Beregn total antal subcontrols
@@ -329,7 +349,7 @@ const GDPRDashboard = ({ orgId = 1 }) => {
                               />
                               <div className="mt-2">
                                 <Button
-                                  variant={saving[subcontrol.id] ? 'success' : 'primary'}
+                                  variant={saving[subcontrol.id] ? 'success' : (savedPolicies[subcontrol.id] && typeof savedPolicies[subcontrol.id] === 'string' && savedPolicies[subcontrol.id].trim() !== '' ? 'warning' : 'primary')}
                                   size="sm"
                                   onClick={() => savePolicyContent(subcontrol.id, subIdx + 1)}
                                   disabled={saving[subcontrol.id]}
@@ -346,6 +366,11 @@ const GDPRDashboard = ({ orgId = 1 }) => {
                                       />
                                       Gemmer...
                                     </>
+                                  ) : savedPolicies[subcontrol.id] && typeof savedPolicies[subcontrol.id] === 'string' && savedPolicies[subcontrol.id].trim() !== '' ? (
+                                    <>
+                                      <i className="fas fa-edit me-2"></i>
+                                      Opdater
+                                    </>
                                   ) : (
                                     <>
                                       <i className="fas fa-save me-2"></i>
@@ -361,11 +386,23 @@ const GDPRDashboard = ({ orgId = 1 }) => {
                                     </small>
                                   </div>
                                 )}
-                                {!saving[subcontrol.id] && savedPolicies[subcontrol.id] && (
+                                {!saving[subcontrol.id] && savedPolicies[subcontrol.id] && typeof savedPolicies[subcontrol.id] === 'string' && savedPolicies[subcontrol.id].trim() !== '' && (
                                   <div className="mt-2 p-2 bg-light border rounded">
-                                    <small className="text-muted d-block mb-1">
-                                      <strong>Gemt:</strong>
-                                    </small>
+                                    <div className="d-flex justify-content-between align-items-start mb-1">
+                                      <small className="text-muted">
+                                        <strong>Gemt:</strong>
+                                      </small>
+                                      <Button
+                                        variant="outline-danger"
+                                        size="sm"
+                                        onClick={() => deletePolicy(subcontrol.id)}
+                                        className="py-0 px-2"
+                                        style={{ fontSize: '0.75rem' }}
+                                      >
+                                        <i className="fas fa-trash me-1"></i>
+                                        Slet
+                                      </Button>
+                                    </div>
                                     <small className="text-dark">
                                       {savedPolicies[subcontrol.id]}
                                     </small>

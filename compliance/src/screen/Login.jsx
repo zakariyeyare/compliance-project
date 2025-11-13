@@ -26,7 +26,7 @@ function Login() {
         navigate('/dashboard');
       }
     } catch (err) {
-      setError('Der opstod en fejl under login');
+      setError(err.message || 'Der opstod en fejl under login');
     } finally {
       setLoading(false);
     }
