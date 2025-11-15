@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Alert, Badge, Button, Card, Col, Container, Nav, Navbar, Row, Table } from 'react-bootstrap';
+import { Alert, Badge, Button, Card, Col, Container, Row, Table } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import Supabase from '../SupabaseClient';
+import Layout from '../components/ui/Layout';
 
 function Reports() {
   const [savedReports, setSavedReports] = useState([]);
@@ -26,21 +26,8 @@ function Reports() {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await Supabase.auth.signOut();
-      navigate('/login');
-    } catch (error) {
-      console.error('Error signing out:', error);
-    }
-  };
-
   const goToDashboard = () => {
     navigate('/dashboard');
-  };
-
-  const goToGDPR = () => {
-    navigate('/gdpr-compliance');
   };
 
   const goToComplianceOverview = () => {
@@ -201,82 +188,23 @@ function Reports() {
             margin-bottom: 20px;
         }
         
-        .control-group {
-            margin-bottom: 30px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-        
-        .control-header {
-            background: #0066cc;
-            color: white;
-            padding: 15px 20px;
-            font-weight: bold;
-            font-size: 18px;
-        }
-        
-        .control-definition {
-            background: #e7f3ff;
-            padding: 15px 20px;
-            font-style: italic;
-            border-bottom: 1px solid #ddd;
-        }
-        
         .policy-item {
             padding: 20px;
             border-bottom: 1px solid #eee;
+            background: #fff;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
         }
         
         .policy-item:last-child {
-            border-bottom: none;
-        }
-        
-        .subcontrol-code {
-            display: inline-block;
-            background: #6c757d;
-            color: white;
-            padding: 5px 12px;
-            border-radius: 5px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-        
-        .activities {
-            margin-top: 10px;
-            margin-bottom: 15px;
-            padding: 10px;
-            background: #fff3cd;
-            border-radius: 5px;
-            border-left: 4px solid #ffc107;
+            border-bottom: 1px solid #ddd;
         }
         
         .policy-content {
-            background: #f8f9fa;
             padding: 15px;
-            border-radius: 5px;
-            margin-top: 10px;
-            border-left: 4px solid #28a745;
-        }
-        
-        .activities-title {
-            font-weight: bold;
-            color: #856404;
-            margin-bottom: 8px;
-        }
-        
-        .activity-item {
-            padding: 5px 0;
-            padding-left: 20px;
-            position: relative;
-        }
-        
-        .activity-item:before {
-            content: "→";
-            position: absolute;
-            left: 0;
-            color: #ffc107;
-            font-weight: bold;
+            line-height: 1.8;
+            color: #333;
         }
         
         .footer {
@@ -343,9 +271,243 @@ function Reports() {
     <div class="metadata">
         <div class="metadata-row">
             <div class="metadata-item">
-                <div class="metadata-label">Standard</div>
-                <div class="metadata-value">${report.standard}</div>
+                <div class="metadata-label">Oprettet Dato</div>
+                <div class="metadata-value">${new Date(report.createdDate).toLocaleDateString('da-DK', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}</div>
             </div>
+        </div>
+        ${report.approvedBy ? `
+        <div class="metadata-row">
+            <div class="metadata-item">
+                <div class="metadata-label">Godkendt Af</div>
+                <div class="metadata-value">${report.approvedByName}</div>
+            </div>
+            <div class="metadata-item">
+                <div class="metadata-label">Godkendt Dato</div>
+                <div class="metadata-value">${new Date(report.approvedDate).toLocaleDateString('da-DK', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}</div>
+            </div>
+        </div>` : ''}
+        ${report.publishedDate ? `
+        <div class="metadata-row">
+            <div class="metadata-item">
+                <div class="metadata-label">Publiceret Dato</div>
+                <div class="metadata-value">${new Date(report.publishedDate).toLocaleDateString('da-DK', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}</div>
+            </div>
+        </div>` : ''}
+    </div>
+    
+    <div class="section">
+        <h2 class="section-title">📋 Compliance Politikker</h2>
+        ${generatePoliciesHTML(report.policies)}
+    </div>
+    
+    <div class="footer">
+        <p><strong>${report.title}</strong></p>
+        <p>Genereret: ${new Date().toLocaleDateString('da-DK', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        })}</p>
+        <p>© ${new Date().getFullYear()} Compliance App - Alle rettigheder forbeholdes</p>
+    </div>
+</body>
+</html>
+    `;
+    
+    // Åbn i nyt vindue til print
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+  };
+
+  // Hjælpefunktion til at generere politikker HTML
+  function generatePoliciesHTML(policies) {
+    let html = '';
+    policies.forEach((policy, index) => {
+      html += `
+        <div class="policy-item">
+          <div class="policy-content">
+            ${policy.policy}
+          </div>
+        </div>
+      `;
+    });
+    
+    return html;
+  }
+
+  const viewReportDetails = (report) => {
+    // Opret HTML dokument uden print knap
+    const htmlContent = generateViewHTML(report);
+    
+    // Åbn i nyt vindue
+    const viewWindow = window.open('', '_blank');
+    viewWindow.document.write(htmlContent);
+    viewWindow.document.close();
+  };
+
+  // Hjælpefunktion til at generere view HTML (uden print knap)
+  const generateViewHTML = (report) => {
+    const htmlContent = `
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${report.title}</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #fff;
+        }
+        
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #0066cc;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #0066cc;
+            margin: 0;
+            font-size: 32px;
+        }
+        
+        .header .version {
+            background: #0066cc;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 5px;
+            display: inline-block;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        
+        .metadata {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border-left: 4px solid #0066cc;
+        }
+        
+        .metadata-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .metadata-item {
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+        }
+        
+        .metadata-label {
+            font-weight: bold;
+            color: #666;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        
+        .metadata-value {
+            color: #333;
+            font-size: 16px;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+        }
+        
+        .section-title {
+            color: #0066cc;
+            font-size: 24px;
+            border-bottom: 2px solid #0066cc;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .policy-item {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            background: #fff;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        
+        .policy-item:last-child {
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .policy-content {
+            padding: 15px;
+            line-height: 1.8;
+            color: #333;
+        }
+        
+        .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 2px solid #ddd;
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .status-godkendt {
+            background: #28a745;
+            color: white;
+        }
+        
+        .status-publiceret {
+            background: #17a2b8;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>${report.title}</h1>
+        <div class="version">Version ${report.version}</div>
+        <div style="margin-top: 15px;">
+            <span class="status-badge status-${report.status.toLowerCase().replace(' ', '-')}">
+                ${report.status}
+            </span>
+        </div>
+    </div>
+    
+    <div class="metadata">
+        <div class="metadata-row">
             <div class="metadata-item">
                 <div class="metadata-label">Oprettet Dato</div>
                 <div class="metadata-value">${new Date(report.createdDate).toLocaleDateString('da-DK', {
@@ -383,21 +545,6 @@ function Reports() {
         </div>` : ''}
     </div>
     
-    <div class="stats">
-        <div class="stat-card">
-            <div class="stat-label">Udfyldte Politikker</div>
-            <div class="stat-number">${report.stats.completed}</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-label">Total Politikker</div>
-            <div class="stat-number">${report.stats.total}</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-label">Færdiggørelsesgrad</div>
-            <div class="stat-number">${report.stats.percentage}%</div>
-        </div>
-    </div>
-    
     <div class="section">
         <h2 class="section-title">📋 Compliance Politikker</h2>
         ${generatePoliciesHTML(report.policies)}
@@ -417,104 +564,24 @@ function Reports() {
 </body>
 </html>
     `;
-    
-    // Åbn i nyt vindue til print
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
-  };
-
-  // Hjælpefunktion til at generere politikker HTML
-  function generatePoliciesHTML(policies) {
-    // Gruppér politikker efter kontrolmål
-    const groupedPolicies = {};
-    policies.forEach(policy => {
-      if (!groupedPolicies[policy.controlCode]) {
-        groupedPolicies[policy.controlCode] = {
-          definition: policy.controlDefinition,
-          policies: []
-        };
-      }
-      groupedPolicies[policy.controlCode].policies.push(policy);
-    });
-    
-    let html = '';
-    Object.keys(groupedPolicies).sort().forEach(controlCode => {
-      const control = groupedPolicies[controlCode];
-      html += `
-        <div class="control-group">
-          <div class="control-header">
-            Kontrolmål ${controlCode}
-          </div>
-          <div class="control-definition">
-            ${control.definition}
-          </div>
-          ${control.policies.map(policy => `
-            <div class="policy-item">
-              <div class="subcontrol-code">${policy.subcontrolCode}</div>
-              ${policy.activities && policy.activities.length > 0 ? `
-                <div class="activities">
-                  <div class="activities-title">📌 Aktiviteter:</div>
-                  ${policy.activities.map(activity => `
-                    <div class="activity-item">${activity.description}</div>
-                  `).join('')}
-                </div>
-              ` : ''}
-              <div class="policy-content">
-                <strong>Politik / Evidens:</strong><br>
-                ${policy.policy}
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      `;
-    });
-    
-    return html;
-  }
-
-  const viewReportDetails = (report) => {
-    // Gem den valgte rapport i sessionStorage så vi kan vise den på en detail side
-    sessionStorage.setItem('selected_report', JSON.stringify(report));
-    // Naviger til detalje side (kan implementeres senere)
-    alert(`Viser detaljer for ${report.title}\n\nPolitikker: ${report.policies.length}\nStatus: ${report.status}`);
+    return htmlContent;
   };
 
   if (loading) {
     return (
-      <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
-        <div className="text-center">
-          <div className="spinner-border text-primary" role="status"></div>
-          <div className="mt-2">Indlæser rapporter...</div>
-        </div>
-      </Container>
+      <Layout title="Alle Rapporter">
+        <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
+          <div className="text-center">
+            <div className="spinner-border text-primary" role="status"></div>
+            <div className="mt-2">Indlæser rapporter...</div>
+          </div>
+        </Container>
+      </Layout>
     );
   }
 
   return (
-    <>
-      {/* Navigation Bar */}
-      <Navbar bg="dark" variant="dark" expand="lg" className="mb-4">
-        <Container>
-          <Navbar.Brand href="#home">Compliance App</Navbar.Brand>
-          <Navbar.Toggle aria-controls="basic-navbar-nav" />
-          <Navbar.Collapse id="basic-navbar-nav">
-            <Nav className="me-auto">
-              <Nav.Link onClick={goToDashboard}>Dashboard</Nav.Link>
-              <Nav.Link onClick={goToGDPR}>GDPR Compliance</Nav.Link>
-              <Nav.Link onClick={goToComplianceOverview}>Compliance Oversigt</Nav.Link>
-              <Nav.Link active>Alle Rapporter</Nav.Link>
-            </Nav>
-            <Nav className="ms-auto">
-              <Button variant="outline-light" onClick={handleLogout}>
-                Log ud
-              </Button>
-            </Nav>
-          </Navbar.Collapse>
-        </Container>
-      </Navbar>
-
-      {/* Main Content */}
+    <Layout title="Alle Rapporter">
       <Container>
         {/* Header */}
         <Row className="mb-4">
@@ -544,47 +611,49 @@ function Reports() {
           </Col>
         </Row>
 
-        {/* Statistics Cards */}
-        <Row className="mb-4">
-          <Col md={3}>
-            <Card className="text-center border-primary">
-              <Card.Body>
-                <h3 className="text-primary">{savedReports.length}</h3>
-                <p className="text-muted mb-0">Total Rapporter</p>
-              </Card.Body>
-            </Card>
-          </Col>
-          <Col md={3}>
-            <Card className="text-center border-success">
-              <Card.Body>
-                <h3 className="text-success">
-                  {savedReports.filter(r => r.status === 'Publiceret').length}
-                </h3>
-                <p className="text-muted mb-0">Publicerede</p>
-              </Card.Body>
-            </Card>
-          </Col>
-          <Col md={3}>
-            <Card className="text-center border-warning">
-              <Card.Body>
-                <h3 className="text-warning">
-                  {savedReports.filter(r => r.status === 'Udkast').length}
-                </h3>
-                <p className="text-muted mb-0">Udkast</p>
-              </Card.Body>
-            </Card>
-          </Col>
-          <Col md={3}>
-            <Card className="text-center border-info">
-              <Card.Body>
-                <h3 className="text-info">
-                  {savedReports.length > 0 ? savedReports[savedReports.length - 1].version : '0.0'}
-                </h3>
-                <p className="text-muted mb-0">Seneste Version</p>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
+        {/* Statistics Cards - kun vis hvis der er rapporter */}
+        {savedReports.length > 0 && (
+          <Row className="mb-4">
+            <Col md={3}>
+              <Card className="text-center border-primary">
+                <Card.Body>
+                  <h3 className="text-primary">{savedReports.length}</h3>
+                  <p className="text-muted mb-0">Total Rapporter</p>
+                </Card.Body>
+              </Card>
+            </Col>
+            <Col md={3}>
+              <Card className="text-center border-success">
+                <Card.Body>
+                  <h3 className="text-success">
+                    {savedReports.filter(r => r.status === 'Publiceret').length}
+                  </h3>
+                  <p className="text-muted mb-0">Publicerede</p>
+                </Card.Body>
+              </Card>
+            </Col>
+            <Col md={3}>
+              <Card className="text-center border-warning">
+                <Card.Body>
+                  <h3 className="text-warning">
+                    {savedReports.filter(r => r.status === 'Udkast').length}
+                  </h3>
+                  <p className="text-muted mb-0">Udkast</p>
+                </Card.Body>
+              </Card>
+            </Col>
+            <Col md={3}>
+              <Card className="text-center border-info">
+                <Card.Body>
+                  <h3 className="text-info">
+                    {savedReports.length > 0 ? Math.max(...savedReports.map(r => parseFloat(r.version))).toFixed(1) : '0.0'}
+                  </h3>
+                  <p className="text-muted mb-0">Seneste Version</p>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+        )}
 
         {/* Reports Table */}
         <Row>
@@ -742,6 +811,7 @@ function Reports() {
                                 variant="outline-danger"
                                 size="sm"
                                 onClick={() => deleteReport(report.id)}
+                                disabled={report.status === 'Publiceret'}
                               >
                                 <i className="fas fa-trash me-1"></i>
                                 Slet
@@ -780,7 +850,7 @@ function Reports() {
           </Row>
         )}
       </Container>
-    </>
+    </Layout>
   );
 }
 

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Alert, Badge, Button, Card, Col, Container, Nav, Navbar, Row, Table } from 'react-bootstrap';
+import { Alert, Badge, Button, Card, Col, Container, Row, Table } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import gdprSupabaseService from '../components/gdbrSupabase';
+import Layout from '../components/ui/Layout';
 import Supabase from '../SupabaseClient';
 
 function ComplianceOverview() {
@@ -55,8 +56,10 @@ function ComplianceOverview() {
         const parsed = JSON.parse(savedPoliciesData);
         setSavedPolicies(parsed);
         
-        // Beregn statistikker
-        const completed = Object.values(parsed).filter(policy => policy && policy.trim() !== '').length;
+        // Beregn statistikker (sikr at policy er en streng før trim)
+        const completed = Object.values(parsed)
+          .filter((policy) => typeof policy === 'string' && policy.trim() !== '')
+          .length;
         const total = getTotalSubcontrolsCount(gdprResult);
         const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
         
@@ -82,7 +85,7 @@ function ComplianceOverview() {
     gdprData?.controls?.forEach(control => {
       control.subcontrols?.forEach(subcontrol => {
         const policy = savedPolicies[subcontrol.id];
-        if (policy && policy.trim() !== '') {
+        if (typeof policy === 'string' && policy.trim() !== '') {
           completed.push({
             controlCode: control.code,
             controlDefinition: control.definition,
@@ -96,21 +99,8 @@ function ComplianceOverview() {
     return completed;
   };
 
-  const handleLogout = async () => {
-    try {
-      await Supabase.auth.signOut();
-      navigate('/login');
-    } catch (error) {
-      console.error('Error signing out:', error);
-    }
-  };
-
   const goBackToGDPR = () => {
     navigate('/gdpr-compliance');
-  };
-
-  const goToDashboard = () => {
-    navigate('/dashboard');
   };
 
   const requestApproval = () => {
@@ -247,17 +237,9 @@ function ComplianceOverview() {
         .stat-label { font-size: 14px; opacity: 0.9; }
         .section { margin-bottom: 40px; }
         .section-title { color: #0066cc; font-size: 24px; border-bottom: 2px solid #0066cc; padding-bottom: 10px; margin-bottom: 20px; }
-        .control-group { margin-bottom: 30px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; }
-        .control-header { background: #0066cc; color: white; padding: 15px 20px; font-weight: bold; font-size: 18px; }
-        .control-definition { background: #e7f3ff; padding: 15px 20px; font-style: italic; border-bottom: 1px solid #ddd; }
-        .policy-item { padding: 20px; border-bottom: 1px solid #eee; }
-        .policy-item:last-child { border-bottom: none; }
-        .subcontrol-code { display: inline-block; background: #6c757d; color: white; padding: 5px 12px; border-radius: 5px; font-weight: bold; margin-bottom: 10px; }
-        .activities { margin-top: 10px; margin-bottom: 15px; padding: 10px; background: #fff3cd; border-radius: 5px; border-left: 4px solid #ffc107; }
-        .policy-content { background: #f8f9fa; padding: 15px; border-radius: 5px; margin-top: 10px; border-left: 4px solid #28a745; }
-        .activities-title { font-weight: bold; color: #856404; margin-bottom: 8px; }
-        .activity-item { padding: 5px 0; padding-left: 20px; position: relative; }
-        .activity-item:before { content: "→"; position: absolute; left: 0; color: #ffc107; font-weight: bold; }
+        .policy-item { padding: 20px; border-bottom: 1px solid #eee; background: #fff; margin-bottom: 15px; border-radius: 8px; border: 1px solid #ddd; }
+        .policy-item:last-child { border-bottom: 1px solid #ddd; }
+        .policy-content { padding: 15px; line-height: 1.8; color: #333; }
         .footer { margin-top: 50px; padding-top: 20px; border-top: 2px solid #ddd; text-align: center; color: #666; font-size: 12px; }
         .status-badge { display: inline-block; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 14px; }
         .status-godkendt { background: #28a745; color: white; }
@@ -277,7 +259,6 @@ function ComplianceOverview() {
     </div>
     <div class="metadata">
         <div class="metadata-row">
-            <div class="metadata-item"><div class="metadata-label">Standard</div><div class="metadata-value">${report.standard}</div></div>
             <div class="metadata-item"><div class="metadata-label">Oprettet Dato</div><div class="metadata-value">${new Date(report.createdDate).toLocaleDateString('da-DK', { year: 'numeric', month: 'long', day: 'numeric' })}</div></div>
         </div>
         ${report.approvedBy ? `<div class="metadata-row">
@@ -287,11 +268,6 @@ function ComplianceOverview() {
         ${report.publishedDate ? `<div class="metadata-row">
             <div class="metadata-item"><div class="metadata-label">Publiceret Dato</div><div class="metadata-value">${new Date(report.publishedDate).toLocaleDateString('da-DK', { year: 'numeric', month: 'long', day: 'numeric' })}</div></div>
         </div>` : ''}
-    </div>
-    <div class="stats">
-        <div class="stat-card"><div class="stat-label">Udfyldte Politikker</div><div class="stat-number">${report.stats.completed}</div></div>
-        <div class="stat-card"><div class="stat-label">Total Politikker</div><div class="stat-number">${report.stats.total}</div></div>
-        <div class="stat-card"><div class="stat-label">Færdiggørelsesgrad</div><div class="stat-number">${report.stats.percentage}%</div></div>
     </div>
     <div class="section">
         <h2 class="section-title">📋 Compliance Politikker</h2>
@@ -307,51 +283,15 @@ function ComplianceOverview() {
   };
 
   const generatePoliciesHTML = (policies) => {
-    const groupedPolicies = {};
-    policies.forEach(policy => {
-      if (!groupedPolicies[policy.controlCode]) {
-        groupedPolicies[policy.controlCode] = { definition: policy.controlDefinition, policies: [] };
-      }
-      groupedPolicies[policy.controlCode].policies.push(policy);
-    });
-    
     let html = '';
-    Object.keys(groupedPolicies).sort().forEach(controlCode => {
-      const control = groupedPolicies[controlCode];
-      html += `<div class="control-group">
-          <div class="control-header">Kontrolmål ${controlCode}</div>
-          <div class="control-definition">${control.definition}</div>
-          ${control.policies.map(policy => `<div class="policy-item">
-              <div class="subcontrol-code">${policy.subcontrolCode}</div>
-              ${policy.activities && policy.activities.length > 0 ? `<div class="activities">
-                  <div class="activities-title">📌 Aktiviteter:</div>
-                  ${policy.activities.map(activity => `<div class="activity-item">${activity.description}</div>`).join('')}
-              </div>` : ''}
-              <div class="policy-content"><strong>Politik / Evidens:</strong><br>${policy.policy}</div>
-          </div>`).join('')}
+    policies.forEach((policy, index) => {
+      html += `<div class="policy-item">
+          <div class="policy-content">${policy.policy}</div>
       </div>`;
     });
     return html;
   };
 
-  const exportPolicies = () => {
-    const completedPolicies = getCompletedPolicies();
-    const exportData = {
-      standard: 'GDPR',
-      exportDate: new Date().toISOString(),
-      stats: stats,
-      policies: completedPolicies
-    };
-    
-    const dataStr = JSON.stringify(exportData, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `GDPR_Policies_${new Date().toISOString().split('T')[0]}.json`;
-    link.click();
-    URL.revokeObjectURL(url);
-  };
 
   if (loading) {
     return (
@@ -367,32 +307,7 @@ function ComplianceOverview() {
   const completedPolicies = getCompletedPolicies();
 
   return (
-    <>
-      {/* Navigation Bar */}
-      <Navbar bg="dark" variant="dark" expand="lg" className="mb-4">
-        <Container>
-          <Navbar.Brand href="#home">Compliance App</Navbar.Brand>
-          <Navbar.Toggle aria-controls="basic-navbar-nav" />
-          <Navbar.Collapse id="basic-navbar-nav">
-            <Nav className="me-auto">
-              <Nav.Link onClick={goToDashboard}>Dashboard</Nav.Link>
-              <Nav.Link onClick={() => navigate('/gdpr-compliance')}>
-                GDPR Compliance
-              </Nav.Link>
-              <Nav.Link active>
-                Compliance Oversigt
-              </Nav.Link>
-            </Nav>
-            <Nav className="ms-auto">
-              <Button variant="outline-light" onClick={handleLogout}>
-                Log ud
-              </Button>
-            </Nav>
-          </Navbar.Collapse>
-        </Container>
-      </Navbar>
-
-      {/* Main Content */}
+    <Layout title="Compliance Oversigt">
       <Container>
         {/* Header */}
         <Row className="mb-4">
@@ -417,14 +332,6 @@ function ComplianceOverview() {
             >
               <i className="fas fa-paper-plane me-2"></i>
               Send til Godkendelse
-            </Button>
-            <Button 
-              variant="success" 
-              onClick={exportPolicies}
-              disabled={completedPolicies.length === 0}
-            >
-              <i className="fas fa-download me-2"></i>
-              Eksporter
             </Button>
           </Col>
         </Row>
@@ -714,7 +621,7 @@ function ComplianceOverview() {
           </Col>
         </Row>
       </Container>
-    </>
+    </Layout>
   );
 }
 

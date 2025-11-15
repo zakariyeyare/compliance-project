@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Alert, Badge, Button, Card, Col, Container, Form, Row, Spinner } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom'; // Tilføj navigation
 import gdprSupabaseService from '../components/gdbrSupabase';
+import Layout from '../components/ui/Layout';
 import '../styles/Gdpr.css';
 
 const GDPRDashboard = ({ orgId = 1 }) => {
@@ -179,12 +180,14 @@ const GDPRDashboard = ({ orgId = 1 }) => {
 
   if (loading) {
     return (
-      <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
-        <div className="text-center">
-          <Spinner animation="border" variant="primary" />
-          <div className="mt-2">Indlæser GDPR dashboard...</div>
-        </div>
-      </Container>
+      <Layout title="GDPR Compliance" fluid>
+        <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
+          <div className="text-center">
+            <Spinner animation="border" variant="primary" />
+            <div className="mt-2">Indlæser GDPR dashboard...</div>
+          </div>
+        </Container>
+      </Layout>
     );
   }
 
@@ -203,6 +206,7 @@ const GDPRDashboard = ({ orgId = 1 }) => {
   }
 
   return (
+    <Layout title="GDPR Compliance" fluid>
     <Container fluid className="gdpr-dashboard mt-4">
       {/* Header med navigation */}
       <div className="dashboard-header mb-4">
@@ -458,6 +462,7 @@ const GDPRDashboard = ({ orgId = 1 }) => {
         </Card>
       </div>
     </Container>
+    </Layout>
   );
 };
 

@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Button, Card, Col, Container, Nav, Navbar, Row } from 'react-bootstrap';
+import { Button, Card, Col, Container, Row } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import Supabase from '../SupabaseClient';
 import CustomCard from '../components/ui/CustomCard';
+import Layout from '../components/ui/Layout';
 
 function Dashboard() {
   const [user, setUser] = useState(null);
@@ -33,37 +34,16 @@ function Dashboard() {
 
   if (loading) {
     return (
-      <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
-        <div>Indl�ser...</div>
-      </Container>
+      <Layout title="Dashboard">
+        <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
+          <div>Indlæser...</div>
+        </Container>
+      </Layout>
     );
   }
 
   return (
-    <>
-      <Navbar bg="dark" variant="dark" expand="lg" className="mb-4">
-        <Container>
-          <Navbar.Brand href="#home">Compliance App</Navbar.Brand>
-          <Navbar.Toggle aria-controls="basic-navbar-nav" />
-          <Navbar.Collapse id="basic-navbar-nav">
-            <Nav className="me-auto">
-              <Nav.Link href="#dashboard">Dashboard</Nav.Link>
-              <Nav.Link onClick={handleChooseCompliance} style={{ cursor: 'pointer' }}>
-                Compliance
-              </Nav.Link>
-            </Nav>
-            <Nav className="ms-auto">
-              <Nav.Item className="d-flex align-items-center me-3 text-light">
-                Velkommen, {user?.user_metadata?.full_name || user?.email}
-              </Nav.Item>
-              <Button variant="outline-light" onClick={handleLogout}>
-                Log ud
-              </Button>
-            </Nav>
-          </Navbar.Collapse>
-        </Container>
-      </Navbar>
-
+    <Layout title="Dashboard">
       <Container>
         <Row className="mb-4">
           <Col>
@@ -127,7 +107,7 @@ function Dashboard() {
           </Col>
         </Row>
       </Container>
-    </>
+    </Layout>
   );
 }
 
