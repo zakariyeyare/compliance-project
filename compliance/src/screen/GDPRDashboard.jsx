@@ -17,12 +17,19 @@ const GDPRDashboard = ({ orgId = 1 }) => {
 
   useEffect(() => {
     loadGDPRData();
-    // Fors├©g at indl├ªse gemte policies fra localStorage
+    // Forsøg at indlæse gemte policies fra localStorage
     const savedPoliciesData = localStorage.getItem('gdpr_saved_policies');
     if (savedPoliciesData) {
       const parsed = JSON.parse(savedPoliciesData);
       setSavedPolicies(parsed);
-      setWorkingPolicies(parsed); // Start med samme data i redigeringsfeltet
+      
+      // Konverter til working policies format (kun content)
+      const workingPoliciesMap = {};
+      Object.keys(parsed).forEach(key => {
+        const policy = parsed[key];
+        workingPoliciesMap[key] = typeof policy === 'object' ? policy.content : policy;
+      });
+      setWorkingPolicies(workingPoliciesMap);
     }
     
     if (orgId) {
@@ -107,18 +114,20 @@ const GDPRDashboard = ({ orgId = 1 }) => {
         localStorage.setItem('gdpr_saved_policies_detailed', JSON.stringify(detailedPolicies));
         
         // Gem også i modificeret format hvor vi inkluderer kontrolmål kode i indholdet
+        const policyObjectForState = {
+          content: contentToSave,
+          controlCode: control?.code || `A.${ordinal}`,
+          controlTitle: control?.definition || 'Kontrolmål'
+        };
+        
         const updatedSavedPolicies = {
           ...savedPolicies,
-          [subcontrolId]: {
-            content: contentToSave,
-            controlCode: control?.code || `A.${ordinal}`,
-            controlTitle: control?.definition || 'Kontrolmål'
-          }
+          [subcontrolId]: policyObjectForState
         };
         localStorage.setItem('gdpr_saved_policies', JSON.stringify(updatedSavedPolicies));
         setSavedPolicies(prev => ({
           ...prev,
-          [subcontrolId]: contentToSave
+          [subcontrolId]: policyObjectForState
         }));
         
         setTimeout(() => {
@@ -167,10 +176,14 @@ const GDPRDashboard = ({ orgId = 1 }) => {
     
     controlData?.subcontrols?.forEach(subcontrol => {
       if (workingPolicies[subcontrol.id] || savedPolicies[subcontrol.id]) {
+        const savedPolicy = savedPolicies[subcontrol.id];
+        const policyContent = workingPolicies[subcontrol.id] || 
+                             (typeof savedPolicy === 'object' ? savedPolicy.content : savedPolicy) || '';
+        
         controlPolicies[subcontrol.id] = {
           code: subcontrol.code,
           activity: subcontrol.activities?.[0]?.description || 'Ingen aktivitet defineret',
-          policy: workingPolicies[subcontrol.id] || savedPolicies[subcontrol.id] || ''
+          policy: policyContent
         };
       }
     });
@@ -233,7 +246,18 @@ const GDPRDashboard = ({ orgId = 1 }) => {
 
   // Beregn antal gemte policies
   const getSavedPoliciesCount = () => {
-    return Object.values(savedPolicies).filter(policy => policy && policy.trim() !== '').length;
+    return Object.values(savedPolicies).filter(policy => {
+      if (!policy) return false;
+      
+      // Håndter både string og objekt format
+      if (typeof policy === 'string') {
+        return policy.trim() !== '';
+      } else if (typeof policy === 'object' && policy.content) {
+        return policy.content.trim() !== '';
+      }
+      
+      return false;
+    }).length;
   };
 
   // Beregn total antal subcontrols
@@ -466,7 +490,9 @@ const GDPRDashboard = ({ orgId = 1 }) => {
                                       <strong>Gemt:</strong>
                                     </small>
                                     <small className="text-dark">
-                                      {savedPolicies[subcontrol.id]}
+                                      {typeof savedPolicies[subcontrol.id] === 'object' 
+                                        ? savedPolicies[subcontrol.id].content 
+                                        : savedPolicies[subcontrol.id]}
                                     </small>
                                   </div>
                                 )}
