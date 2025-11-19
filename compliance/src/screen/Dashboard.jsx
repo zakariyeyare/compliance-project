@@ -48,7 +48,7 @@ function Dashboard() {
         <Row className="mb-4">
           <Col>
             <h1>Dashboard</h1>
-            <p className="text-muted">Velkommen til dit compliance dashboard</p>
+            <p className="text-muted">Welcome to your compliance dashboard</p>
           </Col>
         </Row>
 
