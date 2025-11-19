@@ -18,12 +18,12 @@ const GDPRDashboard = ({ orgId = 1 }) => {
 
   useEffect(() => {
     loadGDPRData();
-    // Forsøg at indlæse gemte policies fra localStorage
+    // Attempt to load saved policies from localStorage
     const savedPoliciesData = localStorage.getItem('gdpr_saved_policies');
     if (savedPoliciesData) {
       const parsed = JSON.parse(savedPoliciesData);
       setSavedPolicies(parsed);
-      setWorkingPolicies(parsed); // Start med samme data i redigeringsfeltet
+      setWorkingPolicies(parsed); // Start with same data in editing field
     }
     
     if (orgId) {
@@ -82,15 +82,15 @@ const GDPRDashboard = ({ orgId = 1 }) => {
       
       const contentToSave = workingPolicies[subcontrolId] || '';
       
-      // Tjek om der er indhold at gemme
+      // Check if there is content to save
       if (!contentToSave.trim()) {
-        alert('Kan ikke gemme en tom politik. Skriv noget indhold først.');
+        alert('Cannot save an empty policy. Please write some content first.');
         setSaving(prev => ({ ...prev, [subcontrolId]: false }));
         return;
       }
       
       if (saveMode === 'local') {
-        // Gem lokalt i browseren
+        // Save locally in browser
         const updatedSavedPolicies = {
           ...savedPolicies,
           [subcontrolId]: contentToSave
@@ -102,7 +102,7 @@ const GDPRDashboard = ({ orgId = 1 }) => {
           setSaving(prev => ({ ...prev, [subcontrolId]: false }));
         }, 800);
       } else {
-        // Forsøg at gemme i database
+        // Attempt to save in database
         await gdprSupabaseService.upsertWorkingPolicy(
           orgId,
           subcontrolId,
@@ -121,9 +121,9 @@ const GDPRDashboard = ({ orgId = 1 }) => {
       }
       
     } catch (err) {
-      console.error('Fejl ved gemning:', err);
+      console.error('Error saving:', err);
       
-      // Fallback til lokal gemning hvis database fejler
+      // Fallback to local saving if database fails
       const updatedSavedPolicies = {
         ...savedPolicies,
         [subcontrolId]: workingPolicies[subcontrolId] || ''
@@ -132,31 +132,31 @@ const GDPRDashboard = ({ orgId = 1 }) => {
       setSavedPolicies(updatedSavedPolicies);
       setSaveMode('local');
       
-      alert('Database fejl - dine ændringer gemmes lokalt i browseren. Kontakt administrator for at fikse database problemet.');
+      alert('Database error - your changes are saved locally in the browser. Contact administrator to fix database issue.');
       setSaving(prev => ({ ...prev, [subcontrolId]: false }));
     }
   };
 
   const showImplementation = (controlCode) => {
-    alert(`Viser implementering for Kontrolmål ${controlCode}`);
+    alert(`Showing implementation for Control ${controlCode}`);
   };
 
-  // Navigation til compliance oversigt
+  // Navigation to compliance overview
   const goToComplianceOverview = () => {
     navigate('/compliance-overview');
   };
 
-  // Navigation tilbage til dashboard
+  // Navigation back to dashboard
   const goBackToDashboard = () => {
     navigate('/dashboard');
   };
 
-  // Beregn antal gemte policies
+  // Calculate number of saved policies
   const getSavedPoliciesCount = () => {
     return Object.values(savedPolicies).filter(policy => policy && typeof policy === 'string' && policy.trim() !== '').length;
   };
 
-  // Slet en gemt politik
+  // Delete a saved policy
   const deletePolicy = (subcontrolId) => {
     const updatedSavedPolicies = { ...savedPolicies };
     delete updatedSavedPolicies[subcontrolId];
@@ -169,7 +169,7 @@ const GDPRDashboard = ({ orgId = 1 }) => {
     setWorkingPolicies(updatedWorkingPolicies);
   };
 
-  // Beregn total antal subcontrols
+  // Calculate total number of subcontrols
   const getTotalSubcontrolsCount = () => {
     let total = 0;
     gdprData?.controls?.forEach(control => {
@@ -184,7 +184,7 @@ const GDPRDashboard = ({ orgId = 1 }) => {
         <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
           <div className="text-center">
             <Spinner animation="border" variant="primary" />
-            <div className="mt-2">Indlæser GDPR dashboard...</div>
+            <div className="mt-2">Loading GDPR dashboard...</div>
           </div>
         </Container>
       </Layout>
@@ -195,10 +195,10 @@ const GDPRDashboard = ({ orgId = 1 }) => {
     return (
       <Container className="mt-4">
         <Alert variant="danger">
-          <Alert.Heading>Fejl ved indlæsning</Alert.Heading>
-          <p>Kunne ikke indlæse GDPR compliance data: {error}</p>
+          <Alert.Heading>Loading Error</Alert.Heading>
+          <p>Could not load GDPR compliance data: {error}</p>
           <Button variant="outline-danger" onClick={loadGDPRData}>
-            Prøv igen
+            Try Again
           </Button>
         </Alert>
       </Container>
@@ -208,7 +208,7 @@ const GDPRDashboard = ({ orgId = 1 }) => {
   return (
     <Layout title="GDPR Compliance" fluid>
     <Container fluid className="gdpr-dashboard mt-4">
-      {/* Header med navigation */}
+      {/* Header with navigation */}
       <div className="dashboard-header mb-4">
         <Row className="align-items-center">
           <Col md={2}>
@@ -218,14 +218,14 @@ const GDPRDashboard = ({ orgId = 1 }) => {
               className="mb-2 mb-md-0"
             >
               <i className="fas fa-arrow-left me-2"></i>
-              Tilbage
+              Back
             </Button>
           </Col>
           <Col md={6}>
             <h2 className="text-primary mb-1">{gdprData?.title}</h2>
             <p className="text-muted mb-0">
               Standard: <strong>{gdprData?.code}</strong> | 
-              Kontrolmål: <strong>{gdprData?.controls?.length || 0}</strong>
+              Controls: <strong>{gdprData?.controls?.length || 0}</strong>
             </p>
           </Col>
           <Col md={4} className="text-end">
@@ -250,9 +250,9 @@ const GDPRDashboard = ({ orgId = 1 }) => {
                 <Col lg={8} md={7}>
                   <div className="control-title-section">
                     <h5 className="mb-1">
-                      <Badge bg="primary" className="me-2">Kontrolmål {control.code}</Badge>
+                      <Badge bg="primary" className="me-2">Control {control.code}</Badge>
                       <small className="text-muted">
-                        (klik for at {expandedControls[control.code] ? 'skjule' : 'vise'} detaljer)
+                        (click to {expandedControls[control.code] ? 'hide' : 'show'} details)
                       </small>
                     </h5>
                     <p className="control-definition mb-0">{control.definition}</p>
@@ -269,7 +269,7 @@ const GDPRDashboard = ({ orgId = 1 }) => {
                     className="me-2"
                   >
                     <i className="fas fa-eye me-1"></i>
-                    Vis implementering
+                    Show Implementation
                   </Button>
                   <i className={`fas fa-chevron-${expandedControls[control.code] ? 'up' : 'down'} text-muted`}></i>
                 </Col>
@@ -282,19 +282,19 @@ const GDPRDashboard = ({ orgId = 1 }) => {
                 {control.subcontrols?.length === 0 ? (
                   <div className="p-4 text-center text-muted">
                     <i className="fas fa-info-circle me-2"></i>
-                    Ingen underkontroller fundet for dette kontrolmål.
+                    No subcontrols found for this control.
                   </div>
                 ) : (
                   control.subcontrols?.map((subcontrol, subIdx) => (
                     <div key={subcontrol.id} className="subcontrol-dashboard-row">
                       <Row className="g-0 min-height-120">
-                        {/* Underkontrol Column */}
+                        {/* Subcontrol Column */}
                         <Col lg={3} md={4} className="underkontrol-column">
                           <div className="dashboard-column-content">
                             <div className="dashboard-column-header">
                               <h6 className="fw-bold mb-0">
                                 <i className="fas fa-list-ul me-2"></i>
-                                Underkontrol
+                                Subcontrol
                               </h6>
                             </div>
                             <div className="dashboard-column-body">
@@ -303,27 +303,27 @@ const GDPRDashboard = ({ orgId = 1 }) => {
                           </div>
                         </Col>
 
-                        {/* Aktivitet Column */}
+                        {/* Activity Column */}
                         <Col lg={5} md={4} className="aktivitet-column">
                           <div className="dashboard-column-content">
                             <div className="dashboard-column-header">
                               <h6 className="fw-bold mb-0">
                                 <i className="fas fa-tasks me-2"></i>
-                                Aktivitet
+                                Activity
                               </h6>
                             </div>
                             <div className="dashboard-column-body">
                               {subcontrol.activities?.length === 0 ? (
                                 <p className="text-muted mb-0 fst-italic">
                                   <i className="fas fa-exclamation-triangle me-2"></i>
-                                  Ingen aktiviteter defineret
+                                  No activities defined
                                 </p>
                               ) : (
                                 <div className="activities-list">
                                   {subcontrol.activities?.map((activity) => (
                                     <div key={activity.id} className="activity-item mb-2">
                                       <p className="mb-0 activity-description">
-                                        <strong>Aktivitet:</strong> {activity.description}
+                                        <strong>Activity:</strong> {activity.description}
                                       </p>
                                     </div>
                                   ))}
@@ -333,20 +333,20 @@ const GDPRDashboard = ({ orgId = 1 }) => {
                           </div>
                         </Col>
 
-                        {/* Politik/evidens Column */}
+                        {/* Policy/Evidence Column */}
                         <Col lg={4} md={4} className="politik-column">
                           <div className="dashboard-column-content">
                             <div className="dashboard-column-header">
                               <h6 className="fw-bold mb-0">
                                 <i className="fas fa-file-alt me-2"></i>
-                                Politik / evidens
+                                Policy / Evidence
                               </h6>
                             </div>
                             <div className="dashboard-column-body">
                               <Form.Control
                                 as="textarea"
                                 rows={4}
-                                placeholder="Skriv politik / bevis..."
+                                placeholder="Write policy / evidence..."
                                 value={workingPolicies[subcontrol.id] || ''}
                                 onChange={(e) => handlePolicyChange(subcontrol.id, e.target.value)}
                                 className="policy-textarea"
@@ -368,17 +368,17 @@ const GDPRDashboard = ({ orgId = 1 }) => {
                                         role="status"
                                         className="me-2"
                                       />
-                                      Gemmer...
+                                      Saving...
                                     </>
                                   ) : savedPolicies[subcontrol.id] && typeof savedPolicies[subcontrol.id] === 'string' && savedPolicies[subcontrol.id].trim() !== '' ? (
                                     <>
                                       <i className="fas fa-edit me-2"></i>
-                                      Opdater
+                                      Update
                                     </>
                                   ) : (
                                     <>
                                       <i className="fas fa-save me-2"></i>
-                                      Gem
+                                      Save
                                     </>
                                   )}
                                 </Button>
@@ -386,7 +386,7 @@ const GDPRDashboard = ({ orgId = 1 }) => {
                                   <div className="mt-2">
                                     <small className="text-success">
                                       <i className="fas fa-check-circle me-1"></i>
-                                      Gemmer dine ændringer...
+                                      Saving your changes...
                                     </small>
                                   </div>
                                 )}
@@ -394,7 +394,7 @@ const GDPRDashboard = ({ orgId = 1 }) => {
                                   <div className="mt-2 p-2 bg-light border rounded">
                                     <div className="d-flex justify-content-between align-items-start mb-1">
                                       <small className="text-muted">
-                                        <strong>Gemt:</strong>
+                                        <strong>Saved:</strong>
                                       </small>
                                       <Button
                                         variant="outline-danger"
@@ -404,7 +404,7 @@ const GDPRDashboard = ({ orgId = 1 }) => {
                                         style={{ fontSize: '0.75rem' }}
                                       >
                                         <i className="fas fa-trash me-1"></i>
-                                        Slet
+                                        Delete
                                       </Button>
                                     </div>
                                     <small className="text-dark">
@@ -432,22 +432,22 @@ const GDPRDashboard = ({ orgId = 1 }) => {
 
       {gdprData?.controls?.length === 0 && (
         <Alert variant="info" className="text-center">
-          <h5>Ingen kontrolmål fundet</h5>
-          <p>Der blev ikke fundet nogen GDPR kontrolmål i databasen.</p>
+          <h5>No Controls Found</h5>
+          <p>No GDPR controls were found in the database.</p>
         </Alert>
       )}
 
-      {/* Next knap til compliance oversigt */}
+      {/* Next button to compliance overview */}
       <div className="mt-5 mb-4">
         <Card className="border-success">
           <Card.Body className="text-center">
             <h5 className="text-success mb-3">
               <i className="fas fa-check-circle me-2"></i>
-              Færdig med at udfylde politikker?
+              Done filling out policies?
             </h5>
             <p className="text-muted mb-3">
-              Du har udfyldt <strong>{getSavedPoliciesCount()}</strong> ud af <strong>{getTotalSubcontrolsCount()}</strong> politikker.
-              Se dit compliance oversigt og eksporter dine politikker.
+              You have completed <strong>{getSavedPoliciesCount()}</strong> out of <strong>{getTotalSubcontrolsCount()}</strong> policies.
+              View your compliance overview and export your policies.
             </p>
             <Button 
               variant="success" 
@@ -456,7 +456,7 @@ const GDPRDashboard = ({ orgId = 1 }) => {
               className="px-5"
             >
               <i className="fas fa-arrow-right me-2"></i>
-              Næste: Se Compliance Oversigt
+              Next: View Compliance Overview
             </Button>
           </Card.Body>
         </Card>

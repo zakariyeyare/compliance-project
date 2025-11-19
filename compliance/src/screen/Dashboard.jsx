@@ -61,7 +61,7 @@ function Dashboard() {
           </Col>
           <Col md={4} className="mb-4">
             <CustomCard
-              title="Alle Rapporter"
+              title="All Reports"
               onClick={() => navigate('/reports')}
             />
           </Col>
@@ -96,10 +96,10 @@ function Dashboard() {
                     Start GDPR Compliance
                   </Button>
                   <Button variant="secondary" onClick={() => navigate('/reports')}>
-                    Se Alle Rapporter
+                    See All Reports
                   </Button>
-                  <Button variant="info" onClick={() => alert('Eksporter data')}>
-                    Eksporter Data
+                  <Button variant="info" onClick={() => alert('Export data')}>
+                    Export Data
                   </Button>
                 </div>
               </Card.Body>
