@@ -19,15 +19,6 @@ function Dashboard() {
     getUser();
   }, []);
 
-  const handleLogout = async () => {
-    try {
-      await Supabase.auth.signOut();
-      navigate('/login');
-    } catch (error) {
-      console.error('Error signing out:', error);
-    }
-  };
-
   const handleChooseCompliance = () => {
     navigate('/gdpr-compliance');
   };

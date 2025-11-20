@@ -336,7 +336,7 @@ function Reports() {
   // Hjælpefunktion til at generere politikker HTML
   function generatePoliciesHTML(policies) {
     let html = '';
-    policies.forEach((policy, index) => {
+  policies.forEach((policy) => {
       html += `
         <div class="policy-item">
           <div class="policy-content">

@@ -3,6 +3,7 @@ import Supabase from '../SupabaseClient';
 
 const AuthContext = createContext({});
 
+// Authentication context hook
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

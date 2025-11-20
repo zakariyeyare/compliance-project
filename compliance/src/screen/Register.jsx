@@ -50,6 +50,7 @@ function Register() {
         }, 3000);
       }
     } catch (err) {
+      console.error('Registration error:', err);
       setError('Der opstod en fejl under registrering');
     } finally {
       setLoading(false);

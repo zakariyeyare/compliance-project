@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import gdprSupabaseService from '../components/gdbrSupabase';
 
 function formatDate(value) {
   try {
@@ -13,6 +14,9 @@ function formatDate(value) {
 export default function Udskriv() {
   const location = useLocation();
   const { name, standard, dato, godkendtAf } = location?.state || {};
+  const [completedPolicies, setCompletedPolicies] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
 
   const resolved = {
     name: name || 'Saim',
@@ -20,6 +24,62 @@ export default function Udskriv() {
     dato: formatDate(dato),
     godkendtAf: godkendtAf || 'Abdirahim',
   };
+
+  useEffect(() => {
+    const loadPolicies = async () => {
+      try {
+        setLoading(true);
+        setLoadError(null);
+        const structure = await gdprSupabaseService.getGDPRFullStructure();
+        const savedPoliciesRaw = localStorage.getItem('gdpr_saved_policies');
+
+        if (!savedPoliciesRaw || !structure?.controls) {
+          setCompletedPolicies([]);
+          return;
+        }
+
+        let savedPolicies = {};
+        try {
+          savedPolicies = JSON.parse(savedPoliciesRaw) || {};
+        } catch (err) {
+          console.error('Kunne ikke parse gemte politikker', err);
+        }
+
+        const compiled = [];
+        structure.controls.forEach((control) => {
+          control.subcontrols?.forEach((subcontrol) => {
+            const policyText = savedPolicies[subcontrol.id];
+            if (typeof policyText === 'string' && policyText.trim()) {
+              compiled.push({
+                controlCode: control.code,
+                controlDefinition: control.definition,
+                subcontrolCode: subcontrol.code,
+                subcontrolTitle: subcontrol.title || subcontrol.definition || '',
+                policy: policyText.trim(),
+                activities: subcontrol.activities || [],
+              });
+            }
+          });
+        });
+
+        setCompletedPolicies(compiled);
+      } catch (error) {
+        console.error('Fejl ved indlæsning af politikker til Udskriv', error);
+        setLoadError('Kunne ikke indlæse udfyldte politikker. Prøv igen senere.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPolicies();
+  }, []);
+
+  const policiesForMail = useMemo(() => {
+    if (!completedPolicies.length) return '- Ingen politikker udfyldt';
+    return completedPolicies
+      .map((policy, index) => `${index + 1}. [${policy.subcontrolCode}] ${policy.policy}`)
+      .join('\n');
+  }, [completedPolicies]);
 
   const handlePrint = () => {
     window.print();
@@ -38,6 +98,9 @@ export default function Udskriv() {
         `- Standard: ${resolved.standard}`,
         `- Dato: ${resolved.dato}`,
         `- Godkendt af: ${resolved.godkendtAf}`,
+        '',
+        'Udfyldte Politikker:',
+        policiesForMail,
         '',
         'Venlig hilsen',
       ].join('\n')
@@ -74,6 +137,46 @@ export default function Udskriv() {
         <div className="btn-row no-print">
           <button className="print-btn" onClick={handlePrint}>Udskriv</button>
           <button className="export-btn" onClick={handleMail}>Export PDF to Mail</button>
+        </div>
+
+        <div className="policies-section">
+          <h2>Udfyldte Politikker</h2>
+          {loading ? (
+            <p className="policies-status">Indlæser politikker...</p>
+          ) : loadError ? (
+            <p className="policies-status error">{loadError}</p>
+          ) : completedPolicies.length === 0 ? (
+            <p className="policies-status">Ingen politikker er udfyldt endnu.</p>
+          ) : (
+            <div className="policies-list">
+              {completedPolicies.map((policy, index) => (
+                <div className="policy-card" key={`${policy.subcontrolCode}-${index}`}>
+                  <div className="policy-header">
+                    <div className="policy-code">
+                      <span className="badge primary">{policy.controlCode}</span>
+                      <span className="badge secondary">{policy.subcontrolCode}</span>
+                    </div>
+                    {policy.subcontrolTitle && (
+                      <p className="policy-title">{policy.subcontrolTitle}</p>
+                    )}
+                  </div>
+                  <div className="policy-body">
+                    <p>{policy.policy}</p>
+                  </div>
+                  {policy.activities?.length > 0 && (
+                    <div className="policy-activities">
+                      <p className="activities-label">Aktiviteter:</p>
+                      <ul>
+                        {policy.activities.map((activity) => (
+                          <li key={activity.id}>{activity.description}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -150,6 +253,101 @@ export default function Udskriv() {
           justify-content: center;
         }
 
+        .policies-section {
+          margin-top: 40px;
+          text-align: left;
+        }
+
+        .policies-section h2 {
+          font-size: 24px;
+          color: #1e3a8a;
+          margin-bottom: 20px;
+        }
+
+        .policies-status {
+          color: #475569;
+          font-size: 16px;
+        }
+
+        .policies-status.error {
+          color: #b91c1c;
+        }
+
+        .policies-list {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+        }
+
+        .policy-card {
+          border: 1px solid #e2e8f0;
+          border-radius: 14px;
+          padding: 20px;
+          background: #f8fafc;
+        }
+
+        .policy-header {
+          margin-bottom: 12px;
+        }
+
+        .policy-code {
+          display: flex;
+          gap: 8px;
+          margin-bottom: 8px;
+        }
+
+        .badge {
+          padding: 6px 12px;
+          border-radius: 999px;
+          font-size: 12px;
+          font-weight: 600;
+        }
+
+        .badge.primary {
+          background: #e0e7ff;
+          color: #3730a3;
+        }
+
+        .badge.secondary {
+          background: #fef3c7;
+          color: #92400e;
+        }
+
+        .policy-title {
+          margin: 0;
+          font-weight: 600;
+          color: #0f172a;
+        }
+
+        .policy-body {
+          background: white;
+          border-radius: 10px;
+          padding: 16px;
+          font-size: 16px;
+          color: #111827;
+          line-height: 1.6;
+        }
+
+        .policy-activities {
+          margin-top: 12px;
+          font-size: 14px;
+          color: #475569;
+        }
+
+        .activities-label {
+          font-weight: 600;
+          margin-bottom: 6px;
+        }
+
+        .policy-activities ul {
+          margin: 0;
+          padding-left: 20px;
+        }
+
+        .policy-activities li {
+          margin-bottom: 4px;
+        }
+
         .export-btn {
           background-color: #2563EB;
           color: white;
@@ -211,6 +409,19 @@ export default function Udskriv() {
           }
           .detail-row {
             border-bottom: 1px solid #e5e7eb;
+          }
+
+          .policies-section {
+            margin-top: 20px;
+          }
+
+          .policies-list {
+            gap: 12px;
+          }
+
+          .policy-card {
+            background: transparent;
+            border-color: #e5e7eb;
           }
         }
       `}</style>

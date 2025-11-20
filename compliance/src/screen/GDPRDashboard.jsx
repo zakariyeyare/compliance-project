@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Alert, Badge, Button, Card, Col, Container, Form, Row, Spinner } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom'; // Tilføj navigation
 import gdprSupabaseService from '../components/gdbrSupabase';
@@ -16,22 +16,7 @@ const GDPRDashboard = ({ orgId = 1 }) => {
   const [saving, setSaving] = useState({});
   const [saveMode, setSaveMode] = useState('local');
 
-  useEffect(() => {
-    loadGDPRData();
-    // Attempt to load saved policies from localStorage
-    const savedPoliciesData = localStorage.getItem('gdpr_saved_policies');
-    if (savedPoliciesData) {
-      const parsed = JSON.parse(savedPoliciesData);
-      setSavedPolicies(parsed);
-      setWorkingPolicies(parsed); // Start with same data in editing field
-    }
-    
-    if (orgId) {
-      loadWorkingPolicies();
-    }
-  }, [orgId]);
-
-  const loadGDPRData = async () => {
+  const loadGDPRData = useCallback(async () => {
     try {
       setLoading(true);
       const data = await gdprSupabaseService.getGDPRFullStructure();
@@ -46,9 +31,9 @@ const GDPRDashboard = ({ orgId = 1 }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const loadWorkingPolicies = async () => {
+  const loadWorkingPolicies = useCallback(async () => {
     try {
       const policies = await gdprSupabaseService.getWorkingPolicies(orgId);
       const policiesMap = {};
@@ -60,7 +45,22 @@ const GDPRDashboard = ({ orgId = 1 }) => {
       console.error('Error loading policies:', err);
       setWorkingPolicies({});
     }
-  };
+  }, [orgId]);
+
+  useEffect(() => {
+    loadGDPRData();
+    // Attempt to load saved policies from localStorage
+    const savedPoliciesData = localStorage.getItem('gdpr_saved_policies');
+    if (savedPoliciesData) {
+      const parsed = JSON.parse(savedPoliciesData);
+      setSavedPolicies(parsed);
+      setWorkingPolicies(parsed); // Start with same data in editing field
+    }
+    
+    if (orgId) {
+      loadWorkingPolicies();
+    }
+  }, [orgId, loadGDPRData, loadWorkingPolicies]);
 
   const toggleControl = (controlCode) => {
     setExpandedControls(prev => ({

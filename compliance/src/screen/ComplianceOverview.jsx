@@ -20,6 +20,7 @@ function ComplianceOverview() {
     loadSavedReports();
     loadCurrentUser();
     loadPendingApproval();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadCurrentUser = async () => {
@@ -284,7 +285,7 @@ function ComplianceOverview() {
 
   const generatePoliciesHTML = (policies) => {
     let html = '';
-    policies.forEach((policy, index) => {
+    policies.forEach((policy) => {
       html += `<div class="policy-item">
           <div class="policy-content">${policy.policy}</div>
       </div>`;
@@ -621,6 +622,17 @@ function ComplianceOverview() {
           </Col>
         </Row>
       </Container>
+      
+      {/* Floating action button - Godkend */}
+      <div className="position-fixed bottom-0 end-0 m-4" style={{ zIndex: 1050 }}>
+        <Button
+          variant="success"
+          size="lg"
+          onClick={() => navigate('/udskriv')}
+        >
+          Godkend
+        </Button>
+      </div>
     </Layout>
   );
 }
