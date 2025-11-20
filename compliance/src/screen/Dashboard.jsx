@@ -5,7 +5,7 @@ import CustomCard from '../components/ui/CustomCard';
 import Layout from '../components/ui/Layout';
 
 const GDPRDashboard = ({ orgId = 1 }) => { // Default til orgId 1
-  const [gdprData, setGdprData] = useState(null);
+  const [gdprData, _setGdprData] = useState(null);
   const [expandedControls, setExpandedControls] = useState({});
   const [workingPolicies, setWorkingPolicies] = useState({}); // Tekst der redigeres
   const [savedPolicies, setSavedPolicies] = useState({}); // Tekst der er gemt
