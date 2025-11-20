@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Button, Card, Col, Container, Row } from 'react-bootstrap';
+import { Card, Col, Container, Row } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import Supabase from '../SupabaseClient';
 import CustomCard from '../components/ui/CustomCard';
@@ -74,25 +74,6 @@ function Dashboard() {
                   <strong>Navn:</strong> {user?.user_metadata?.full_name || 'Ikke angivet'}<br />
                   <strong>Registreret:</strong> {new Date(user?.created_at).toLocaleDateString('da-DK')}
                 </Card.Text>
-              </Card.Body>
-            </Card>
-          </Col>
-          <Col md={6} className="mb-4">
-            <Card>
-              <Card.Body>
-                <Card.Title>Hurtige Handlinger</Card.Title>
-                <div className="d-grid gap-2">
-                  <Button variant="primary" onClick={handleChooseCompliance}>
-                    <i className="fas fa-shield-alt me-2"></i>
-                    Start GDPR Compliance
-                  </Button>
-                  <Button variant="secondary" onClick={() => navigate('/reports')}>
-                    See All Reports
-                  </Button>
-                  <Button variant="info" onClick={() => alert('Export data')}>
-                    Export Data
-                  </Button>
-                </div>
               </Card.Body>
             </Card>
           </Col>

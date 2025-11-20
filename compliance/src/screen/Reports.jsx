@@ -47,13 +47,6 @@ function Reports() {
     alert('Rapporten er nu publiceret!');
   };
 
-  const deleteReport = (reportId) => {
-    if (window.confirm('Er du sikker på at du vil slette denne rapport?')) {
-      const updatedReports = savedReports.filter(report => report.id !== reportId);
-      localStorage.setItem('gdpr_reports', JSON.stringify(updatedReports));
-      setSavedReports(updatedReports);
-    }
-  };
 
   const exportReport = (report) => {
     // Opret print-venlig HTML dokument
@@ -806,15 +799,6 @@ function Reports() {
                               >
                                 <i className="fas fa-download me-1"></i>
                                 Download
-                              </Button>
-                              <Button
-                                variant="outline-danger"
-                                size="sm"
-                                onClick={() => deleteReport(report.id)}
-                                disabled={report.status === 'Publiceret'}
-                              >
-                                <i className="fas fa-trash me-1"></i>
-                                Slet
                               </Button>
                             </div>
                           </td>
