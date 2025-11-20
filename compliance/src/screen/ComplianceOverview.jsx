@@ -40,17 +40,17 @@ function ComplianceOverview() {
     try {
       setLoading(true);
       
-      // Hent GDPR struktur
+      // Fetch GDPR structure
       const gdprResult = await gdprSupabaseService.getGDPRFullStructure();
       setGdprData(gdprResult);
       
-      // Hent gemte politikker fra localStorage
+      // Fetch saved policies from localStorage
       const savedPoliciesData = localStorage.getItem('gdpr_saved_policies');
       if (savedPoliciesData) {
         const parsed = JSON.parse(savedPoliciesData);
         setSavedPolicies(parsed);
         
-        // Beregn statistikker (sikr at policy er en streng før trim)
+        // Calculate statistics (ensure policy is a string before trim)
         const completed = Object.values(parsed)
           .filter((policy) => typeof policy === 'string' && policy.trim() !== '')
           .length;
@@ -99,7 +99,7 @@ function ComplianceOverview() {
 
   const handleCreateReport = () => {
     setShowCreateModal(true);
-    // Generer automatisk titel
+    // Generate automatic title
     const latestVersion = savedReports.length > 0 
       ? Math.max(...savedReports.map(r => parseFloat(r.version))) 
       : 0;
@@ -111,12 +111,12 @@ function ComplianceOverview() {
     const completedPolicies = getCompletedPolicies();
     
     if (completedPolicies.length === 0) {
-      alert('Ingen politikker at gemme. Udfyld først nogle politikker.');
+      alert('No policies to save. Please fill out some policies first.');
       setShowCreateModal(false);
       return;
     }
 
-    // Generer versionsnummer
+    // Generate version number
     const latestVersion = savedReports.length > 0 
       ? Math.max(...savedReports.map(r => parseFloat(r.version))) 
       : 0;
@@ -125,14 +125,14 @@ function ComplianceOverview() {
     const newReport = {
       id: Date.now(),
       version: newVersion,
-      title: newReportTitle || `GDPR Compliance Rapport v${newVersion}`,
+      title: newReportTitle || `GDPR Compliance Report v${newVersion}`,
       createdDate: new Date().toISOString(),
-      requestedBy: currentUser?.email || 'Ukendt bruger',
-      requestedByName: currentUser?.user_metadata?.full_name || currentUser?.email || 'Ukendt',
+      requestedBy: currentUser?.email || 'Unknown user',
+      requestedByName: currentUser?.user_metadata?.full_name || currentUser?.email || 'Unknown',
       standard: 'GDPR',
       stats: { ...stats },
       policies: completedPolicies,
-      status: 'Udkast'
+      status: 'Draft'
     };
 
     const updatedReports = [...savedReports, newReport];
@@ -141,7 +141,7 @@ function ComplianceOverview() {
     setShowCreateModal(false);
     setNewReportTitle('');
     
-    alert(`Rapport "${newReport.title}" er oprettet som udkast!`);
+    alert(`Report "${newReport.title}" has been created as draft!`);
   };
 
   const approveIndividualReport = (reportId) => {
@@ -149,9 +149,9 @@ function ComplianceOverview() {
       if (report.id === reportId) {
         return { 
           ...report, 
-          status: 'Godkendt',
-          approvedBy: currentUser?.email || 'Ukendt bruger',
-          approvedByName: currentUser?.user_metadata?.full_name || currentUser?.email || 'Ukendt',
+          status: 'Approved',
+          approvedBy: currentUser?.email || 'Unknown user',
+          approvedByName: currentUser?.user_metadata?.full_name || currentUser?.email || 'Unknown',
           approvedDate: new Date().toISOString()
         };
       }
@@ -160,32 +160,32 @@ function ComplianceOverview() {
     
     localStorage.setItem('gdpr_reports', JSON.stringify(updatedReports));
     setSavedReports(updatedReports);
-    alert('Rapporten er nu godkendt!');
+    alert('The report has been approved!');
   };
 
   const publishReport = (reportId) => {
     const updatedReports = savedReports.map(report => {
       if (report.id === reportId) {
-        return { ...report, status: 'Publiceret', publishedDate: new Date().toISOString() };
+        return { ...report, status: 'Published', publishedDate: new Date().toISOString() };
       }
       return report;
     });
     
     localStorage.setItem('gdpr_reports', JSON.stringify(updatedReports));
     setSavedReports(updatedReports);
-    alert('Rapporten er nu publiceret!');
+    alert('The report has been published!');
   };
 
   const deleteReport = (reportId) => {
     const report = savedReports.find(r => r.id === reportId);
     
-    // Tjek om rapporten er godkendt eller publiceret
-    if (report.status === 'Godkendt' || report.status === 'Publiceret') {
-      alert('Denne rapport kan ikke slettes, da den er godkendt eller publiceret!');
+    // Check if report is approved or published
+    if (report.status === 'Approved' || report.status === 'Published') {
+      alert('This report cannot be deleted because it has been approved or published!');
       return;
     }
     
-    if (window.confirm('Er du sikker på at du vil slette denne rapport?')) {
+    if (window.confirm('Are you sure you want to delete this report?')) {
       const updatedReports = savedReports.filter(report => report.id !== reportId);
       localStorage.setItem('gdpr_reports', JSON.stringify(updatedReports));
       setSavedReports(updatedReports);
@@ -193,16 +193,16 @@ function ComplianceOverview() {
   };
 
   const exportReport = (report) => {
-    // Opret print-venlig HTML dokument
+    // Create print-friendly HTML document
     const htmlContent = generateReportHTML(report);
     
-    // Åbn i nyt vindue til print
+    // Open in new window for printing
     const printWindow = window.open('', '_blank');
     printWindow.document.write(htmlContent);
     printWindow.document.close();
   };
 
-  // Hjælpefunktion til at generere rapport HTML
+  // Helper function to generate report HTML
   const generateReportHTML = (report) => {
     return `
 <!DOCTYPE html>
@@ -255,24 +255,24 @@ function ComplianceOverview() {
     </div>
     <div class="metadata">
         <div class="metadata-row">
-            <div class="metadata-item"><div class="metadata-label">Oprettet Dato</div><div class="metadata-value">${new Date(report.createdDate).toLocaleDateString('da-DK', { year: 'numeric', month: 'long', day: 'numeric' })}</div></div>
+            <div class="metadata-item"><div class="metadata-label">Created Date</div><div class="metadata-value">${new Date(report.createdDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div></div>
         </div>
         ${report.approvedBy ? `<div class="metadata-row">
-            <div class="metadata-item"><div class="metadata-label">Godkendt Af</div><div class="metadata-value">${report.approvedByName}</div></div>
-            <div class="metadata-item"><div class="metadata-label">Godkendt Dato</div><div class="metadata-value">${new Date(report.approvedDate).toLocaleDateString('da-DK', { year: 'numeric', month: 'long', day: 'numeric' })}</div></div>
+            <div class="metadata-item"><div class="metadata-label">Approved By</div><div class="metadata-value">${report.approvedByName}</div></div>
+            <div class="metadata-item"><div class="metadata-label">Approved Date</div><div class="metadata-value">${new Date(report.approvedDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div></div>
         </div>` : ''}
         ${report.publishedDate ? `<div class="metadata-row">
-            <div class="metadata-item"><div class="metadata-label">Publiceret Dato</div><div class="metadata-value">${new Date(report.publishedDate).toLocaleDateString('da-DK', { year: 'numeric', month: 'long', day: 'numeric' })}</div></div>
+            <div class="metadata-item"><div class="metadata-label">Published Date</div><div class="metadata-value">${new Date(report.publishedDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div></div>
         </div>` : ''}
     </div>
     <div class="section">
-        <h2 class="section-title">📋 Compliance Politikker</h2>
+        <h2 class="section-title">📋 Compliance Policies</h2>
         ${generatePoliciesHTML(report.policies)}
     </div>
     <div class="footer">
         <p><strong>${report.title}</strong></p>
-        <p>Genereret: ${new Date().toLocaleDateString('da-DK', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
-        <p>© ${new Date().getFullYear()} Compliance App - Alle rettigheder forbeholdes</p>
+        <p>Generated: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+        <p>© ${new Date().getFullYear()} Compliance App - All rights reserved</p>
     </div>
 </body>
 </html>`;
@@ -294,7 +294,7 @@ function ComplianceOverview() {
       <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
         <div className="text-center">
           <div className="spinner-border text-primary" role="status"></div>
-          <div className="mt-2">Indlæser compliance oversigt...</div>
+          <div className="mt-2">Loading compliance overview...</div>
         </div>
       </Container>
     );
@@ -303,13 +303,13 @@ function ComplianceOverview() {
   const completedPolicies = getCompletedPolicies();
 
   return (
-    <Layout title="Compliance Oversigt">
+    <Layout title="Compliance Overview">
       <Container>
         {/* Header */}
         <Row className="mb-4">
           <Col md={12} lg={8}>
-            <h1 className="text-primary">GDPR Compliance Oversigt</h1>
-            <p className="text-muted">Oversigt over dine gemte compliance politikker</p>
+            <h1 className="text-primary">GDPR Compliance Overview</h1>
+            <p className="text-muted">Overview of your saved compliance policies</p>
           </Col>
           <Col md={12} lg={4} className="text-lg-end">
             <div className="d-flex flex-wrap gap-2 justify-content-lg-end">
@@ -318,7 +318,7 @@ function ComplianceOverview() {
                 onClick={goBackToGDPR}
               >
                 <i className="fas fa-arrow-left me-2"></i>
-                Tilbage til GDPR
+                Back to GDPR
               </Button>
               <Button 
                 variant="success" 
@@ -326,7 +326,7 @@ function ComplianceOverview() {
                 disabled={completedPolicies.length === 0}
               >
                 <i className="fas fa-plus me-2"></i>
-                Opret Ny Rapport
+                Create New Report
               </Button>
             </div>
           </Col>
@@ -338,7 +338,7 @@ function ComplianceOverview() {
             <Card className="text-center border-primary">
               <Card.Body>
                 <h3 className="text-primary">{stats.completed}</h3>
-                <p className="text-muted mb-0">Udfyldte Politikker</p>
+                <p className="text-muted mb-0">Completed Policies</p>
               </Card.Body>
             </Card>
           </Col>
@@ -346,7 +346,7 @@ function ComplianceOverview() {
             <Card className="text-center border-info">
               <Card.Body>
                 <h3 className="text-info">{stats.total}</h3>
-                <p className="text-muted mb-0">Total Politikker</p>
+                <p className="text-muted mb-0">Total Policies</p>
               </Card.Body>
             </Card>
           </Col>
@@ -354,7 +354,7 @@ function ComplianceOverview() {
             <Card className="text-center border-success">
               <Card.Body>
                 <h3 className="text-success">{stats.percentage}%</h3>
-                <p className="text-muted mb-0">Færdiggørelsesgrad</p>
+                <p className="text-muted mb-0">Completion Rate</p>
               </Card.Body>
             </Card>
           </Col>
@@ -366,19 +366,19 @@ function ComplianceOverview() {
             {stats.percentage === 100 ? (
               <Alert variant="success">
                 <i className="fas fa-check-circle me-2"></i>
-                <strong>Fantastisk!</strong> Du har udfyldt alle GDPR politikker.
+                <strong>Fantastic!</strong> You have completed all GDPR policies.
               </Alert>
             ) : stats.percentage >= 50 ? (
               <Alert variant="warning">
                 <i className="fas fa-exclamation-triangle me-2"></i>
-                <strong>Godt arbejde!</strong> Du har udfyldt {stats.percentage}% af politikkerne. 
-                Fortsæt med at færdiggøre de resterende.
+                <strong>Good work!</strong> You have completed {stats.percentage}% of the policies. 
+                Continue to finish the remaining ones.
               </Alert>
             ) : (
               <Alert variant="info">
                 <i className="fas fa-info-circle me-2"></i>
-                <strong>Kom i gang!</strong> Du har udfyldt {stats.percentage}% af politikkerne. 
-                Der er stadig meget arbejde at gøre.
+                <strong>Get started!</strong> You have completed {stats.percentage}% of the policies. 
+                There is still a lot of work to do.
               </Alert>
             )}
           </Col>
@@ -392,7 +392,7 @@ function ComplianceOverview() {
                 <Card.Header className="bg-info text-white">
                   <h5 className="mb-0">
                     <i className="fas fa-folder-open me-2"></i>
-                    Gemte Rapporter ({savedReports.length})
+                    Saved Reports ({savedReports.length})
                   </h5>
                 </Card.Header>
                 <Card.Body className="p-0">
@@ -400,11 +400,11 @@ function ComplianceOverview() {
                     <thead className="table-light">
                       <tr>
                         <th>Version</th>
-                        <th>Titel</th>
-                        <th>Oprettet</th>
+                        <th>Title</th>
+                        <th>Created</th>
                         <th>Status</th>
-                        <th>Politikker</th>
-                        <th>Handlinger</th>
+                        <th>Policies</th>
+                        <th>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -418,7 +418,7 @@ function ComplianceOverview() {
                           <td><strong>{report.title}</strong></td>
                           <td>
                             <small className="text-muted">
-                              {new Date(report.createdDate).toLocaleDateString('da-DK', {
+                              {new Date(report.createdDate).toLocaleDateString('en-US', {
                                 year: 'numeric',
                                 month: 'long',
                                 day: 'numeric',
@@ -429,8 +429,8 @@ function ComplianceOverview() {
                           </td>
                           <td>
                             <Badge bg={
-                              report.status === 'Publiceret' ? 'success' : 
-                              report.status === 'Godkendt' ? 'info' : 
+                              report.status === 'Published' ? 'success' : 
+                              report.status === 'Approved' ? 'info' : 
                               'warning'
                             }>
                               {report.status}
@@ -438,31 +438,31 @@ function ComplianceOverview() {
                           </td>
                           <td>
                             <Badge bg="info">
-                              {report.policies.length} politikker
+                              {report.policies.length} policies
                             </Badge>
                           </td>
                           <td>
                             <div className="d-flex gap-2">
-                              {report.status === 'Udkast' && (
+                              {report.status === 'Draft' && (
                                 <Button
                                   variant="primary"
                                   size="sm"
                                   onClick={() => approveIndividualReport(report.id)}
-                                  title="Godkend denne rapport"
+                                  title="Approve this report"
                                 >
                                   <i className="fas fa-check-circle me-1"></i>
-                                  Godkend
+                                  Approve
                                 </Button>
                               )}
-                              {report.status === 'Godkendt' && (
+                              {report.status === 'Approved' && (
                                 <Button
                                   variant="success"
                                   size="sm"
                                   onClick={() => publishReport(report.id)}
-                                  title="Publicer denne godkendte rapport"
+                                  title="Publish this approved report"
                                 >
                                   <i className="fas fa-check me-1"></i>
-                                  Publicer
+                                  Publish
                                 </Button>
                               )}
                               <Button
@@ -477,11 +477,11 @@ function ComplianceOverview() {
                                 variant="outline-danger"
                                 size="sm"
                                 onClick={() => deleteReport(report.id)}
-                                disabled={report.status === 'Godkendt' || report.status === 'Publiceret'}
-                                title={report.status === 'Godkendt' || report.status === 'Publiceret' ? 'Godkendte/Publicerede rapporter kan ikke slettes' : 'Slet denne rapport'}
+                                disabled={report.status === 'Approved' || report.status === 'Published'}
+                                title={report.status === 'Approved' || report.status === 'Published' ? 'Approved/Published reports cannot be deleted' : 'Delete this report'}
                               >
                                 <i className="fas fa-trash me-1"></i>
-                                Slet
+                                Delete
                               </Button>
                             </div>
                           </td>
@@ -502,28 +502,28 @@ function ComplianceOverview() {
               <Card.Header>
                 <h5 className="mb-0">
                   <i className="fas fa-list me-2"></i>
-                  Udfyldte Politikker ({completedPolicies.length})
+                  Completed Policies ({completedPolicies.length})
                 </h5>
               </Card.Header>
               <Card.Body className="p-0">
                 {completedPolicies.length === 0 ? (
                   <div className="p-4 text-center text-muted">
                     <i className="fas fa-exclamation-circle fa-3x mb-3"></i>
-                    <h5>Ingen politikker udfyldt endnu</h5>
-                    <p>Gå tilbage til GDPR Compliance for at udfylde dine politikker.</p>
+                    <h5>No policies completed yet</h5>
+                    <p>Go back to GDPR Compliance to fill out your policies.</p>
                     <Button variant="primary" onClick={goBackToGDPR}>
                       <i className="fas fa-plus me-2"></i>
-                      Start med at udfylde politikker
+                      Start filling out policies
                     </Button>
                   </div>
                 ) : (
                   <Table responsive striped hover>
                     <thead className="table-dark">
                       <tr>
-                        <th>Kontrolmål</th>
-                        <th>Underkontrol</th>
-                        <th>Politik / Evidens</th>
-                        <th>Aktiviteter</th>
+                        <th>Control Objective</th>
+                        <th>Subcontrol</th>
+                        <th>Policy / Evidence</th>
+                        <th>Activities</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -553,7 +553,7 @@ function ComplianceOverview() {
                           <td>
                             {item.activities.length === 0 ? (
                               <small className="text-muted fst-italic">
-                                Ingen aktiviteter
+                                No activities
                               </small>
                             ) : (
                               <div>
@@ -585,38 +585,38 @@ function ComplianceOverview() {
         <Modal.Header closeButton>
           <Modal.Title>
             <i className="fas fa-file-alt me-2"></i>
-            Opret Ny Rapport
+            Create New Report
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form>
             <Form.Group className="mb-3">
-              <Form.Label>Rapporttitel</Form.Label>
+              <Form.Label>Report Title</Form.Label>
               <Form.Control
                 type="text"
-                placeholder="Indtast rapporttitel"
+                placeholder="Enter report title"
                 value={newReportTitle}
                 onChange={(e) => setNewReportTitle(e.target.value)}
                 autoFocus
               />
               <Form.Text className="text-muted">
-                Rapporten vil blive oprettet som udkast
+                The report will be created as a draft
               </Form.Text>
             </Form.Group>
             <Alert variant="info">
               <small>
-                <strong>Info:</strong> Rapporten indeholder {completedPolicies.length} udfyldte politikker ({stats.percentage}% færdig)
+                <strong>Info:</strong> The report contains {completedPolicies.length} completed policies ({stats.percentage}% complete)
               </small>
             </Alert>
           </Form>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowCreateModal(false)}>
-            Annuller
+            Cancel
           </Button>
           <Button variant="primary" onClick={confirmCreateReport}>
             <i className="fas fa-save me-2"></i>
-            Opret Rapport
+            Create Report
           </Button>
         </Modal.Footer>
       </Modal>

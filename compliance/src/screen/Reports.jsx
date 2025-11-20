@@ -35,10 +35,10 @@ function Reports() {
   };
 
   const exportReport = (report) => {
-    // Opret print-venlig HTML dokument
+    // Create print-friendly HTML document
     const htmlContent = `
 <!DOCTYPE html>
-<html lang="da">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -234,7 +234,7 @@ function Reports() {
 </head>
 <body>
     <button class="print-button no-print" onclick="window.print()">
-        🖨️ Print / Gem som PDF
+        🖨️ Print / Save as PDF
     </button>
     
     <div class="header">
@@ -250,8 +250,8 @@ function Reports() {
     <div class="metadata">
         <div class="metadata-row">
             <div class="metadata-item">
-                <div class="metadata-label">Oprettet Dato</div>
-                <div class="metadata-value">${new Date(report.createdDate).toLocaleDateString('da-DK', {
+                <div class="metadata-label">Created Date</div>
+                <div class="metadata-value">${new Date(report.createdDate).toLocaleDateString('en-US', {
                   year: 'numeric',
                   month: 'long',
                   day: 'numeric'
@@ -261,12 +261,12 @@ function Reports() {
         ${report.approvedBy ? `
         <div class="metadata-row">
             <div class="metadata-item">
-                <div class="metadata-label">Godkendt Af</div>
+                <div class="metadata-label">Approved By</div>
                 <div class="metadata-value">${report.approvedByName}</div>
             </div>
             <div class="metadata-item">
-                <div class="metadata-label">Godkendt Dato</div>
-                <div class="metadata-value">${new Date(report.approvedDate).toLocaleDateString('da-DK', {
+                <div class="metadata-label">Approved Date</div>
+                <div class="metadata-value">${new Date(report.approvedDate).toLocaleDateString('en-US', {
                   year: 'numeric',
                   month: 'long',
                   day: 'numeric'
@@ -276,8 +276,8 @@ function Reports() {
         ${report.publishedDate ? `
         <div class="metadata-row">
             <div class="metadata-item">
-                <div class="metadata-label">Publiceret Dato</div>
-                <div class="metadata-value">${new Date(report.publishedDate).toLocaleDateString('da-DK', {
+                <div class="metadata-label">Published Date</div>
+                <div class="metadata-value">${new Date(report.publishedDate).toLocaleDateString('en-US', {
                   year: 'numeric',
                   month: 'long',
                   day: 'numeric'
@@ -287,35 +287,35 @@ function Reports() {
     </div>
     
     <div class="section">
-        <h2 class="section-title">📋 Compliance Politikker</h2>
+        <h2 class="section-title">📋 Compliance Policies</h2>
         ${generatePoliciesHTML(report.policies)}
     </div>
     
     <div class="footer">
         <p><strong>${report.title}</strong></p>
-        <p>Genereret: ${new Date().toLocaleDateString('da-DK', {
+        <p>Generated: ${new Date().toLocaleDateString('en-US', {
           year: 'numeric',
           month: 'long',
           day: 'numeric',
           hour: '2-digit',
           minute: '2-digit'
         })}</p>
-        <p>© ${new Date().getFullYear()} Compliance App - Alle rettigheder forbeholdes</p>
+        <p>© ${new Date().getFullYear()} Compliance App - All rights reserved</p>
     </div>
 </body>
 </html>
     `;
     
-    // Åbn i nyt vindue til print
+    // Open in new window for printing
     const printWindow = window.open('', '_blank');
     printWindow.document.write(htmlContent);
     printWindow.document.close();
   };
 
-  // Hjælpefunktion til at generere politikker HTML
+  // Helper function to generate policies HTML
   function generatePoliciesHTML(policies) {
     let html = '';
-  policies.forEach((policy) => {
+    policies.forEach((policy) => {
       html += `
         <div class="policy-item">
           <div class="policy-content">
@@ -329,20 +329,20 @@ function Reports() {
   }
 
   const viewReportDetails = (report) => {
-    // Opret HTML dokument uden print knap
+    // Create HTML document without print button
     const htmlContent = generateViewHTML(report);
     
-    // Åbn i nyt vindue
+    // Open in new window
     const viewWindow = window.open('', '_blank');
     viewWindow.document.write(htmlContent);
     viewWindow.document.close();
   };
 
-  // Hjælpefunktion til at generere view HTML (uden print knap)
+  // Helper function to generate view HTML (without print button)
   const generateViewHTML = (report) => {
     const htmlContent = `
 <!DOCTYPE html>
-<html lang="da">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -488,8 +488,8 @@ function Reports() {
     <div class="metadata">
         <div class="metadata-row">
             <div class="metadata-item">
-                <div class="metadata-label">Oprettet Dato</div>
-                <div class="metadata-value">${new Date(report.createdDate).toLocaleDateString('da-DK', {
+                <div class="metadata-label">Created Date</div>
+                <div class="metadata-value">${new Date(report.createdDate).toLocaleDateString('en-US', {
                   year: 'numeric',
                   month: 'long',
                   day: 'numeric'
@@ -499,12 +499,12 @@ function Reports() {
         ${report.approvedBy ? `
         <div class="metadata-row">
             <div class="metadata-item">
-                <div class="metadata-label">Godkendt Af</div>
+                <div class="metadata-label">Approved By</div>
                 <div class="metadata-value">${report.approvedByName}</div>
             </div>
             <div class="metadata-item">
-                <div class="metadata-label">Godkendt Dato</div>
-                <div class="metadata-value">${new Date(report.approvedDate).toLocaleDateString('da-DK', {
+                <div class="metadata-label">Approved Date</div>
+                <div class="metadata-value">${new Date(report.approvedDate).toLocaleDateString('en-US', {
                   year: 'numeric',
                   month: 'long',
                   day: 'numeric'
@@ -514,8 +514,8 @@ function Reports() {
         ${report.publishedDate ? `
         <div class="metadata-row">
             <div class="metadata-item">
-                <div class="metadata-label">Publiceret Dato</div>
-                <div class="metadata-value">${new Date(report.publishedDate).toLocaleDateString('da-DK', {
+                <div class="metadata-label">Published Date</div>
+                <div class="metadata-value">${new Date(report.publishedDate).toLocaleDateString('en-US', {
                   year: 'numeric',
                   month: 'long',
                   day: 'numeric'
@@ -525,20 +525,20 @@ function Reports() {
     </div>
     
     <div class="section">
-        <h2 class="section-title">📋 Compliance Politikker</h2>
+        <h2 class="section-title">📋 Compliance Policies</h2>
         ${generatePoliciesHTML(report.policies)}
     </div>
     
     <div class="footer">
         <p><strong>${report.title}</strong></p>
-        <p>Genereret: ${new Date().toLocaleDateString('da-DK', {
+        <p>Generated: ${new Date().toLocaleDateString('en-US', {
           year: 'numeric',
           month: 'long',
           day: 'numeric',
           hour: '2-digit',
           minute: '2-digit'
         })}</p>
-        <p>© ${new Date().getFullYear()} Compliance App - Alle rettigheder forbeholdes</p>
+        <p>© ${new Date().getFullYear()} Compliance App - All rights reserved</p>
     </div>
 </body>
 </html>
@@ -548,11 +548,11 @@ function Reports() {
 
   if (loading) {
     return (
-      <Layout title="Alle Rapporter">
+      <Layout title="All Reports">
         <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
           <div className="text-center">
             <div className="spinner-border text-primary" role="status"></div>
-            <div className="mt-2">Indlæser rapporter...</div>
+            <div className="mt-2">Loading reports...</div>
           </div>
         </Container>
       </Layout>
@@ -560,16 +560,16 @@ function Reports() {
   }
 
   return (
-    <Layout title="Alle Rapporter">
+    <Layout title="All Reports">
       <Container>
         {/* Header */}
         <Row className="mb-4">
           <Col md={8}>
             <h1 className="text-primary">
               <i className="fas fa-folder-open me-3"></i>
-              Alle Rapporter
+              All Reports
             </h1>
-            <p className="text-muted">Oversigt over alle dine gemte GDPR compliance rapporter</p>
+            <p className="text-muted">Overview of all your saved GDPR compliance reports</p>
           </Col>
           <Col md={4} className="text-end">
             <Button 
@@ -578,19 +578,19 @@ function Reports() {
               className="me-2"
             >
               <i className="fas fa-arrow-left me-2"></i>
-              Tilbage til Dashboard
+              Back to Dashboard
             </Button>
           </Col>
         </Row>
 
-        {/* Statistics Cards - kun vis hvis der er rapporter */}
+        {/* Statistics Cards - only show if there are reports */}
         {savedReports.length > 0 && (
           <Row className="mb-4">
             <Col md={3}>
               <Card className="text-center border-primary">
                 <Card.Body>
                   <h3 className="text-primary">{savedReports.length}</h3>
-                  <p className="text-muted mb-0">Total Rapporter</p>
+                  <p className="text-muted mb-0">Total Reports</p>
                 </Card.Body>
               </Card>
             </Col>
@@ -598,9 +598,9 @@ function Reports() {
               <Card className="text-center border-success">
                 <Card.Body>
                   <h3 className="text-success">
-                    {savedReports.filter(r => r.status === 'Publiceret').length}
+                    {savedReports.filter(r => r.status === 'Published').length}
                   </h3>
-                  <p className="text-muted mb-0">Publicerede</p>
+                  <p className="text-muted mb-0">Published</p>
                 </Card.Body>
               </Card>
             </Col>
@@ -608,9 +608,9 @@ function Reports() {
               <Card className="text-center border-warning">
                 <Card.Body>
                   <h3 className="text-warning">
-                    {savedReports.filter(r => r.status === 'Udkast').length}
+                    {savedReports.filter(r => r.status === 'Draft').length}
                   </h3>
-                  <p className="text-muted mb-0">Udkast</p>
+                  <p className="text-muted mb-0">Drafts</p>
                 </Card.Body>
               </Card>
             </Col>
@@ -620,7 +620,7 @@ function Reports() {
                   <h3 className="text-info">
                     {savedReports.length > 0 ? Math.max(...savedReports.map(r => parseFloat(r.version))).toFixed(1) : '0.0'}
                   </h3>
-                  <p className="text-muted mb-0">Seneste Version</p>
+                  <p className="text-muted mb-0">Latest Version</p>
                 </Card.Body>
               </Card>
             </Col>
@@ -634,17 +634,17 @@ function Reports() {
               <Card.Header className="bg-primary text-white">
                 <h5 className="mb-0">
                   <i className="fas fa-file-alt me-2"></i>
-                  Rapport Oversigt
+                  Report Overview
                 </h5>
               </Card.Header>
               <Card.Body className="p-0">
                 {savedReports.length === 0 ? (
                   <div className="p-5 text-center">
                     <i className="fas fa-folder-open fa-4x text-muted mb-3"></i>
-                    <h4 className="text-muted">Ingen rapporter fundet</h4>
+                    <h4 className="text-muted">No reports found</h4>
                     <p className="text-muted mb-4">
-                      Du har endnu ikke oprettet nogen rapporter. 
-                      Gå til Compliance Oversigt for at oprette din første rapport.
+                      You haven't created any reports yet. 
+                      Go to Compliance Overview to create your first report.
                     </p>
                   </div>
                 ) : (
@@ -652,13 +652,13 @@ function Reports() {
                     <thead className="table-dark">
                       <tr>
                         <th>Version</th>
-                        <th>Titel</th>
-                        <th>Oprettet</th>
+                        <th>Title</th>
+                        <th>Created</th>
                         <th>Status</th>
                         <th>Standard</th>
-                        <th>Politikker</th>
+                        <th>Policies</th>
                         <th>Completion</th>
-                        <th>Handlinger</th>
+                        <th>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -675,7 +675,7 @@ function Reports() {
                               <div>
                                 <small className="text-success">
                                   <i className="fas fa-check-circle me-1"></i>
-                                  Godkendt: {new Date(report.approvedDate).toLocaleDateString('da-DK')}
+                                  Approved: {new Date(report.approvedDate).toLocaleDateString('en-US')}
                                 </small>
                               </div>
                             )}
@@ -683,21 +683,21 @@ function Reports() {
                               <div>
                                 <small className="text-info">
                                   <i className="fas fa-globe me-1"></i>
-                                  Publiceret: {new Date(report.publishedDate).toLocaleDateString('da-DK')}
+                                  Published: {new Date(report.publishedDate).toLocaleDateString('en-US')}
                                 </small>
                               </div>
                             )}
                           </td>
                           <td>
                             <small>
-                              {new Date(report.createdDate).toLocaleDateString('da-DK', {
+                              {new Date(report.createdDate).toLocaleDateString('en-US', {
                                 year: 'numeric',
                                 month: 'short',
                                 day: 'numeric'
                               })}
                               <br />
                               <span className="text-muted">
-                                {new Date(report.createdDate).toLocaleTimeString('da-DK', {
+                                {new Date(report.createdDate).toLocaleTimeString('en-US', {
                                   hour: '2-digit',
                                   minute: '2-digit'
                                 })}
@@ -705,14 +705,14 @@ function Reports() {
                             </small>
                           </td>
                           <td>
-                            <Badge bg={report.status === 'Godkendt' ? 'success' : report.status === 'Publiceret' ? 'info' : 'warning'} className="px-3 py-2">
-                              <i className={`fas fa-${report.status === 'Godkendt' ? 'check-circle' : report.status === 'Publiceret' ? 'globe' : 'clock'} me-1`}></i>
+                            <Badge bg={report.status === 'Approved' ? 'success' : report.status === 'Published' ? 'info' : 'warning'} className="px-3 py-2">
+                              <i className={`fas fa-${report.status === 'Approved' ? 'check-circle' : report.status === 'Published' ? 'globe' : 'clock'} me-1`}></i>
                               {report.status}
                             </Badge>
                             {report.approvedBy && (
                               <div className="mt-1">
                                 <small className="text-muted">
-                                  Godkendt af: {report.approvedByName}
+                                  Approved by: {report.approvedByName}
                                 </small>
                               </div>
                             )}
@@ -724,7 +724,7 @@ function Reports() {
                           </td>
                           <td>
                             <Badge bg="info" className="px-3 py-2">
-                              {report.policies.length} politikker
+                              {report.policies.length} policies
                             </Badge>
                           </td>
                           <td>
@@ -751,7 +751,7 @@ function Reports() {
                                 onClick={() => viewReportDetails(report)}
                               >
                                 <i className="fas fa-eye me-1"></i>
-                                Vis
+                                View
                               </Button>
                               <Button
                                 variant="outline-primary"
@@ -761,14 +761,14 @@ function Reports() {
                                 <i className="fas fa-download me-1"></i>
                                 Download
                               </Button>
-                              {report.status === 'Godkendt' && (
+                              {report.status === 'Approved' && (
                                 <Button
                                   variant="outline-secondary"
                                   size="sm"
                                   onClick={goToComplianceOverview}
                                 >
                                   <i className="fas fa-arrow-right me-1"></i>
-                                  Gå til Oversigt for at Publicere
+                                  Go to Overview to Publish
                                 </Button>
                               )}
                             </div>
@@ -790,16 +790,16 @@ function Reports() {
               <Alert variant="info">
                 <Alert.Heading>
                   <i className="fas fa-info-circle me-2"></i>
-                  Hjælp til Rapporter
+                  Report Help
                 </Alert.Heading>
                 <hr />
                 <ul className="mb-0">
-                  <li><strong>Godkendt:</strong> Rapporten er godkendt og klar til publicering. Gå til Compliance Oversigt for at publicere den.</li>
-                  <li><strong>Publiceret:</strong> Rapporten er offentliggjort og officiel. Dette låser versionen.</li>
-                  <li><strong>Download:</strong> Eksporter rapporten som print-venlig HTML til dokumentation eller backup.</li>
-                  <li><strong>Vis:</strong> Se rapportens fulde indhold i et nyt vindue.</li>
-                  <li><strong>Version:</strong> Hver rapport får automatisk et unikt versionsnummer (0.1, 0.2, osv.).</li>
-                  <li><strong>Godkendelse:</strong> Alle rapporter skal godkendes før de får et versionsnummer.</li>
+                  <li><strong>Approved:</strong> The report is approved and ready for publishing. Go to Compliance Overview to publish it.</li>
+                  <li><strong>Published:</strong> The report is published and official. This locks the version.</li>
+                  <li><strong>Download:</strong> Export the report as print-friendly HTML for documentation or backup.</li>
+                  <li><strong>View:</strong> See the report's full content in a new window.</li>
+                  <li><strong>Version:</strong> Each report automatically gets a unique version number (0.1, 0.2, etc.).</li>
+                  <li><strong>Approval:</strong> All reports must be approved before they get a version number.</li>
                 </ul>
               </Alert>
             </Col>
