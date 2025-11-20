@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+﻿import { useEffect, useState, useCallback } from 'react';
 import { Alert, Badge, Button, Card, Col, Container, Form, Row, Spinner } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom'; // Tilf├©j navigation
 import gdprSupabaseService from '../components/gdbrSupabase';
@@ -14,9 +14,25 @@ const GDPRDashboard = ({ orgId = 1 }) => {
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState({});
   const [saveMode, setSaveMode] = useState('local');
+  // Flyt loadWorkingPolicies over useEffect for at undg├© TDZ (definition kommer lige nedenfor)
+
+  const loadWorkingPolicies = useCallback(async () => {
+    try {
+      const policies = await gdprSupabaseService.getWorkingPolicies(orgId);
+      const policiesMap = {};
+      policies.forEach(policy => {
+        policiesMap[policy.subcontrol_id] = policy.content;
+      });
+      setWorkingPolicies(policiesMap);
+    } catch (err) {
+      console.error('Error loading policies:', err);
+      setWorkingPolicies({});
+    }
+  }, [orgId]);
 
   useEffect(() => {
     loadGDPRData();
+<<<<<<< HEAD
     // Forsøg at indlæse gemte policies fra localStorage
     const savedPoliciesData = localStorage.getItem('gdpr_saved_policies');
     if (savedPoliciesData) {
@@ -30,12 +46,31 @@ const GDPRDashboard = ({ orgId = 1 }) => {
         workingPoliciesMap[key] = typeof policy === 'object' ? policy.content : policy;
       });
       setWorkingPolicies(workingPoliciesMap);
+=======
+    // Forsøg at indlæse gemte policies fra localStorage (normaliser værdier)
+    const savedPoliciesData = localStorage.getItem('gdpr_saved_policies');
+    if (savedPoliciesData) {
+      try {
+        const parsed = JSON.parse(savedPoliciesData);
+        const normalized = {};
+        Object.keys(parsed || {}).forEach((k) => {
+          const v = parsed[k];
+          if (v && typeof v === 'object' && 'content' in v) normalized[k] = v.content || '';
+          else if (typeof v === 'string') normalized[k] = v;
+          else normalized[k] = '';
+        });
+        setSavedPolicies(normalized);
+        setWorkingPolicies(normalized); // Start med samme data i redigeringsfeltet
+      } catch (e) {
+        console.error('Error parsing saved policies from localStorage:', e);
+      }
+>>>>>>> 499a7b70284ce5c48659c2430644fa743186eb79
     }
     
     if (orgId) {
       loadWorkingPolicies();
     }
-  }, [orgId]);
+  }, [orgId, loadWorkingPolicies]);
 
   const loadGDPRData = async () => {
     try {
@@ -54,19 +89,6 @@ const GDPRDashboard = ({ orgId = 1 }) => {
     }
   };
 
-  const loadWorkingPolicies = async () => {
-    try {
-      const policies = await gdprSupabaseService.getWorkingPolicies(orgId);
-      const policiesMap = {};
-      policies.forEach(policy => {
-        policiesMap[policy.subcontrol_id] = policy.content;
-      });
-      setWorkingPolicies(policiesMap);
-    } catch (err) {
-      console.error('Error loading policies:', err);
-      setWorkingPolicies({});
-    }
-  };
 
   const toggleControl = (controlCode) => {
     setExpandedControls(prev => ({
@@ -246,6 +268,7 @@ const GDPRDashboard = ({ orgId = 1 }) => {
 
   // Beregn antal gemte policies
   const getSavedPoliciesCount = () => {
+<<<<<<< HEAD
     return Object.values(savedPolicies).filter(policy => {
       if (!policy) return false;
       
@@ -283,6 +306,17 @@ const GDPRDashboard = ({ orgId = 1 }) => {
     localStorage.setItem('gdpr_saved_policies', JSON.stringify(updatedSavedPolicies));
     setSavedPolicies(updatedSavedPolicies);
     setWorkingPolicies(updatedWorkingPolicies);
+=======
+    return Object.values(savedPolicies).filter((policy) => {
+      if (!policy) return false;
+      if (typeof policy === 'string') return policy.trim() !== '';
+      if (typeof policy === 'object') {
+        const content = policy.content ?? '';
+        return typeof content === 'string' ? content.trim() !== '' : true;
+      }
+      return false;
+    }).length;
+>>>>>>> 499a7b70284ce5c48659c2430644fa743186eb79
   };
 
   // Beregn total antal subcontrols
@@ -334,7 +368,7 @@ const GDPRDashboard = ({ orgId = 1 }) => {
               Tilbage
             </Button>
           </Col>
-          <Col md={6}>
+          <Col md={5}>
             <h2 className="text-primary mb-1">{gdprData?.title}</h2>
             <p className="text-muted mb-0">
               Standard: <strong>{gdprData?.code}</strong> | 
@@ -352,7 +386,7 @@ const GDPRDashboard = ({ orgId = 1 }) => {
               Se Rapporter
             </Button>
           </Col>
-          <Col md={2} className="text-end">
+          <Col md={3} className="text-end">
             <Badge bg="info" className="fs-6 px-3 py-2">
               GDPR Compliance Dashboard
             </Badge>
@@ -374,7 +408,7 @@ const GDPRDashboard = ({ orgId = 1 }) => {
                 <Col lg={8} md={7}>
                   <div className="control-title-section">
                     <h5 className="mb-1">
-                      <Badge bg="primary" className="me-2">Kontrolm├Ñl {control.code}</Badge>
+                      <Badge bg="primary" className="me-2">Control {control.code}</Badge>
                       <small className="text-muted">
                         (klik for at {expandedControls[control.code] ? 'skjule' : 'vise'} detaljer)
                       </small>
@@ -564,11 +598,11 @@ const GDPRDashboard = ({ orgId = 1 }) => {
           <Card.Body className="text-center">
             <h5 className="text-success mb-3">
               <i className="fas fa-check-circle me-2"></i>
-              F├ªrdig med at udfylde politikker?
+              Finished with policies?
             </h5>
             <p className="text-muted mb-3">
-              Du har udfyldt <strong>{getSavedPoliciesCount()}</strong> ud af <strong>{getTotalSubcontrolsCount()}</strong> politikker.
-              Se dit compliance oversigt og eksporter dine politikker.
+              You have completed <strong>{getSavedPoliciesCount()}</strong> out of <strong>{getTotalSubcontrolsCount()}</strong> policies.
+              View your compliance overview and export your policies.
             </p>
             <Button 
               variant="success" 
@@ -577,7 +611,7 @@ const GDPRDashboard = ({ orgId = 1 }) => {
               className="px-5"
             >
               <i className="fas fa-arrow-right me-2"></i>
-              N├ªste: Se Compliance Oversigt
+              Next: View Compliance Overview
             </Button>
           </Card.Body>
         </Card>
