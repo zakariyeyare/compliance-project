@@ -77,7 +77,20 @@ export default function Udskriv() {
   const policiesForMail = useMemo(() => {
     if (!completedPolicies.length) return '- Ingen politikker udfyldt';
     return completedPolicies
-      .map((policy, index) => `${index + 1}. [${policy.subcontrolCode}] ${policy.policy}`)
+      .map((policy, index) => {
+        const baseLines = [
+          `${index + 1}. [${policy.subcontrolCode}] ${policy.policy}`,
+        ];
+
+        if (policy.activities?.length) {
+          baseLines.push('   Aktiviteter:');
+          policy.activities.forEach((activity, activityIndex) => {
+            baseLines.push(`   ${activityIndex + 1}) ${activity.description}`);
+          });
+        }
+
+        return baseLines.join('\n');
+      })
       .join('\n');
   }, [completedPolicies]);
 
