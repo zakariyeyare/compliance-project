@@ -113,12 +113,6 @@ function Dashboard() {
               onClick={handleChooseCompliance}
             />
           </Col>
-          <Col md={6} className="mb-4">
-            <CustomCard
-              title="Settings"
-              onClick={() => alert('Settings clicked')}
-            />
-          </Col>
         </Row>
 
         <Row>

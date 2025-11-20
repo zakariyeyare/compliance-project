@@ -47,7 +47,7 @@ function WebApp() {
             />
             
             {/* Default Route */}
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/" element={<Navigate to="/login" replace />} />
             
             {/* Catch all route */}
             <Route path="*" element={<Navigate to="/dashboard" replace />} />

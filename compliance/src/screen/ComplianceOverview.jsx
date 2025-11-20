@@ -266,7 +266,7 @@ function ComplianceOverview() {
 
           {/* Action Buttons - Kompakt */}
           <Row>
-            <Col className="d-flex justify-content-between">
+            <Col className="d-flex justify-content-between align-items-center">
               <Button 
                 variant="outline-secondary" 
                 onClick={handleBack}
@@ -275,14 +275,16 @@ function ComplianceOverview() {
                 ← {fromGDPR ? 'Tilbage til GDPR Dashboard' : 'Tilbage til Dashboard'}
               </Button>
               
-              <Button 
-                variant="success" 
-                onClick={handleApprove}
-                disabled={approved}
-                className="px-4"
-              >
-                {approved ? 'Godkendt ✅' : '📋 Godkend Compliance Oversigt'}
-              </Button>
+              <div className="d-flex gap-2">
+                <Button 
+                  variant="success" 
+                  onClick={handleApprove}
+                  disabled={approved}
+                  className="px-4"
+                >
+                  {approved ? 'Godkendt ✅' : '📋 Godkend Compliance Oversigt'}
+                </Button>
+              </div>
             </Col>
           </Row>
         </Col>

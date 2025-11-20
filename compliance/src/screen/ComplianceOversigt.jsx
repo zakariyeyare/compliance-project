@@ -85,6 +85,42 @@ function ComplianceOversigt() {
                     </Button>
                   </div>
                 </Form>
+
+                {/* Hurtige Handlinger */}
+                <hr className="my-4" />
+                <Card.Title className="h5 mb-3">Hurtige Handlinger</Card.Title>
+                <Row>
+                  <Col md={4} className="mb-2">
+                    <Button 
+                      variant="outline-primary" 
+                      className="w-100"
+                      onClick={() => navigate('/gdpr-compliance')}
+                    >
+                      <i className="fas fa-shield-alt me-2"></i>
+                      GDPR Dashboard
+                    </Button>
+                  </Col>
+                  <Col md={4} className="mb-2">
+                    <Button 
+                      variant="outline-success" 
+                      className="w-100"
+                      onClick={() => navigate('/compliance-overview')}
+                    >
+                      <i className="fas fa-chart-line me-2"></i>
+                      Se Rapporter
+                    </Button>
+                  </Col>
+                  <Col md={4} className="mb-2">
+                    <Button 
+                      variant="outline-info" 
+                      className="w-100"
+                      onClick={() => navigate('/dashboard')}
+                    >
+                      <i className="fas fa-home me-2"></i>
+                      Dashboard
+                    </Button>
+                  </Col>
+                </Row>
               </Card.Body>
             </Card>
 

@@ -260,6 +260,31 @@ const GDPRDashboard = ({ orgId = 1 }) => {
     }).length;
   };
 
+  // Slet en gemt politik (fra teamets version)
+  const deletePolicy = (subcontrolId) => {
+    const updatedSavedPolicies = { ...savedPolicies };
+    delete updatedSavedPolicies[subcontrolId];
+
+    const updatedWorkingPolicies = { ...workingPolicies };
+    delete updatedWorkingPolicies[subcontrolId];
+
+    // Opdater også detailed policies
+    const existingDetailedPolicies = localStorage.getItem('gdpr_saved_policies_detailed');
+    if (existingDetailedPolicies) {
+      try {
+        const detailedPolicies = JSON.parse(existingDetailedPolicies);
+        delete detailedPolicies[subcontrolId];
+        localStorage.setItem('gdpr_saved_policies_detailed', JSON.stringify(detailedPolicies));
+      } catch (e) {
+        console.error('Error updating detailed policies:', e);
+      }
+    }
+
+    localStorage.setItem('gdpr_saved_policies', JSON.stringify(updatedSavedPolicies));
+    setSavedPolicies(updatedSavedPolicies);
+    setWorkingPolicies(updatedWorkingPolicies);
+  };
+
   // Beregn total antal subcontrols
   const getTotalSubcontrolsCount = () => {
     let total = 0;
@@ -486,9 +511,21 @@ const GDPRDashboard = ({ orgId = 1 }) => {
                                 )}
                                 {!saving[subcontrol.id] && savedPolicies[subcontrol.id] && (
                                   <div className="mt-2 p-2 bg-light border rounded">
-                                    <small className="text-muted d-block mb-1">
-                                      <strong>Gemt:</strong>
-                                    </small>
+                                    <div className="d-flex justify-content-between align-items-start mb-1">
+                                      <small className="text-muted">
+                                        <strong>Gemt:</strong>
+                                      </small>
+                                      <Button
+                                        variant="outline-danger"
+                                        size="sm"
+                                        onClick={() => deletePolicy(subcontrol.id)}
+                                        className="py-0 px-2"
+                                        style={{ fontSize: '0.75rem' }}
+                                      >
+                                        <i className="fas fa-trash me-1"></i>
+                                        Slet
+                                      </Button>
+                                    </div>
                                     <small className="text-dark">
                                       {typeof savedPolicies[subcontrol.id] === 'object' 
                                         ? savedPolicies[subcontrol.id].content 
