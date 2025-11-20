@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Alert, Badge, Button, Card, Col, Container, Row, Table } from 'react-bootstrap';
+import { Alert, Badge, Button, Card, Col, Container, Form, Modal, Row, Table } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import gdprSupabaseService from '../components/gdbrSupabase';
 import Layout from '../components/ui/Layout';
@@ -11,28 +11,21 @@ function ComplianceOverview() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ completed: 0, total: 0, percentage: 0 });
   const [savedReports, setSavedReports] = useState([]);
-  const [pendingApproval, setPendingApproval] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newReportTitle, setNewReportTitle] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
     loadComplianceData();
     loadSavedReports();
     loadCurrentUser();
-    loadPendingApproval();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadCurrentUser = async () => {
     const { data: { user } } = await Supabase.auth.getUser();
     setCurrentUser(user);
-  };
-
-  const loadPendingApproval = () => {
-    const pendingData = localStorage.getItem('gdpr_pending_approval');
-    if (pendingData) {
-      setPendingApproval(JSON.parse(pendingData));
-    }
   };
 
   const loadSavedReports = () => {
@@ -104,100 +97,70 @@ function ComplianceOverview() {
     navigate('/gdpr-compliance');
   };
 
-  const goToUdskriv = () => {
-    const receiptRaw = localStorage.getItem('gdpr_last_receipt');
-    if (!receiptRaw) {
-      alert('Der er ingen godkendt rapport at udskrive endnu. Godkend en rapport først.');
-      return;
-    }
-
-    try {
-      const receiptData = JSON.parse(receiptRaw);
-      navigate('/udskriv', { state: receiptData });
-    } catch (error) {
-      console.error('Kunne ikke parse seneste godkendelse:', error);
-      navigate('/udskriv');
-    }
+  const handleCreateReport = () => {
+    setShowCreateModal(true);
+    // Generer automatisk titel
+    const latestVersion = savedReports.length > 0 
+      ? Math.max(...savedReports.map(r => parseFloat(r.version))) 
+      : 0;
+    const newVersion = (latestVersion + 0.1).toFixed(1);
+    setNewReportTitle(`GDPR Compliance Rapport v${newVersion}`);
   };
 
-  const requestApproval = () => {
+  const confirmCreateReport = () => {
     const completedPolicies = getCompletedPolicies();
     
     if (completedPolicies.length === 0) {
-      alert('Ingen politikker at sende til godkendelse. Udfyld først nogle politikker.');
+      alert('Ingen politikker at gemme. Udfyld først nogle politikker.');
+      setShowCreateModal(false);
       return;
     }
 
-    if (pendingApproval) {
-      alert('Der er allerede en rapport til godkendelse. Godkend eller afvis den først.');
-      return;
-    }
-
-    // Generer versionsnummer for den kommende rapport
+    // Generer versionsnummer
     const latestVersion = savedReports.length > 0 
       ? Math.max(...savedReports.map(r => parseFloat(r.version))) 
       : 0;
     const newVersion = (latestVersion + 0.1).toFixed(1);
 
-    const approvalRequest = {
+    const newReport = {
       id: Date.now(),
       version: newVersion,
-      title: `GDPR Compliance Rapport v${newVersion}`,
-      requestedDate: new Date().toISOString(),
+      title: newReportTitle || `GDPR Compliance Rapport v${newVersion}`,
+      createdDate: new Date().toISOString(),
       requestedBy: currentUser?.email || 'Ukendt bruger',
       requestedByName: currentUser?.user_metadata?.full_name || currentUser?.email || 'Ukendt',
       standard: 'GDPR',
       stats: { ...stats },
       policies: completedPolicies,
-      status: 'Afventer godkendelse'
+      status: 'Udkast'
     };
 
-    localStorage.setItem('gdpr_pending_approval', JSON.stringify(approvalRequest));
-    setPendingApproval(approvalRequest);
-    
-    alert('Rapporten er sendt til godkendelse!');
-  };
-
-  const approveReport = () => {
-    if (!pendingApproval) return;
-
-    const approvedReport = {
-      ...pendingApproval,
-      id: Date.now(),
-      approvedDate: new Date().toISOString(),
-      approvedBy: currentUser?.email || 'Ukendt godkender',
-      approvedByName: currentUser?.user_metadata?.full_name || currentUser?.email || 'Ukendt',
-      createdDate: new Date().toISOString(),
-      status: 'Godkendt'
-    };
-
-    const receiptMeta = {
-      standard: pendingApproval.standard || 'GDPR',
-      godkendtAf: approvedReport.approvedByName,
-      godkendtAfEmail: approvedReport.approvedBy,
-      dato: approvedReport.approvedDate,
-    };
-    localStorage.setItem('gdpr_last_receipt', JSON.stringify(receiptMeta));
-
-    const updatedReports = [...savedReports, approvedReport];
+    const updatedReports = [...savedReports, newReport];
     localStorage.setItem('gdpr_reports', JSON.stringify(updatedReports));
     setSavedReports(updatedReports);
+    setShowCreateModal(false);
+    setNewReportTitle('');
     
-    // Fjern pending approval
-    localStorage.removeItem('gdpr_pending_approval');
-    setPendingApproval(null);
-    
-    alert(`Rapport v${approvedReport.version} er godkendt og oprettet!`);
+    alert(`Rapport "${newReport.title}" er oprettet som udkast!`);
   };
 
-  const rejectApproval = () => {
-    if (!pendingApproval) return;
-
-    if (window.confirm('Er du sikker på at du vil afvise denne rapport?')) {
-      localStorage.removeItem('gdpr_pending_approval');
-      setPendingApproval(null);
-      alert('Rapporten er afvist.');
-    }
+  const approveIndividualReport = (reportId) => {
+    const updatedReports = savedReports.map(report => {
+      if (report.id === reportId) {
+        return { 
+          ...report, 
+          status: 'Godkendt',
+          approvedBy: currentUser?.email || 'Ukendt bruger',
+          approvedByName: currentUser?.user_metadata?.full_name || currentUser?.email || 'Ukendt',
+          approvedDate: new Date().toISOString()
+        };
+      }
+      return report;
+    });
+    
+    localStorage.setItem('gdpr_reports', JSON.stringify(updatedReports));
+    setSavedReports(updatedReports);
+    alert('Rapporten er nu godkendt!');
   };
 
   const publishReport = (reportId) => {
@@ -214,6 +177,14 @@ function ComplianceOverview() {
   };
 
   const deleteReport = (reportId) => {
+    const report = savedReports.find(r => r.id === reportId);
+    
+    // Tjek om rapporten er godkendt eller publiceret
+    if (report.status === 'Godkendt' || report.status === 'Publiceret') {
+      alert('Denne rapport kan ikke slettes, da den er godkendt eller publiceret!');
+      return;
+    }
+    
     if (window.confirm('Er du sikker på at du vil slette denne rapport?')) {
       const updatedReports = savedReports.filter(report => report.id !== reportId);
       localStorage.setItem('gdpr_reports', JSON.stringify(updatedReports));
@@ -336,86 +307,30 @@ function ComplianceOverview() {
       <Container>
         {/* Header */}
         <Row className="mb-4">
-          <Col md={8}>
+          <Col md={12} lg={8}>
             <h1 className="text-primary">GDPR Compliance Oversigt</h1>
             <p className="text-muted">Oversigt over dine gemte compliance politikker</p>
           </Col>
-          <Col md={4} className="text-end">
-            <Button 
-              variant="outline-secondary" 
-              onClick={goBackToGDPR}
-              className="me-2"
-            >
-              <i className="fas fa-arrow-left me-2"></i>
-              Tilbage til GDPR
-            </Button>
-            <Button 
-              variant="warning" 
-              onClick={requestApproval}
-              disabled={completedPolicies.length === 0 || pendingApproval !== null}
-              className="me-2"
-            >
-              <i className="fas fa-paper-plane me-2"></i>
-              Send til Godkendelse
-            </Button>
+          <Col md={12} lg={4} className="text-lg-end">
+            <div className="d-flex flex-wrap gap-2 justify-content-lg-end">
+              <Button 
+                variant="outline-secondary" 
+                onClick={goBackToGDPR}
+              >
+                <i className="fas fa-arrow-left me-2"></i>
+                Tilbage til GDPR
+              </Button>
+              <Button 
+                variant="success" 
+                onClick={handleCreateReport}
+                disabled={completedPolicies.length === 0}
+              >
+                <i className="fas fa-plus me-2"></i>
+                Opret Ny Rapport
+              </Button>
+            </div>
           </Col>
         </Row>
-
-        {/* Pending Approval Section */}
-        {pendingApproval && (
-          <Row className="mb-4">
-            <Col>
-              <Alert variant="warning">
-                <Alert.Heading>
-                  <i className="fas fa-clock me-2"></i>
-                  Rapport Afventer Godkendelse
-                </Alert.Heading>
-                <hr />
-                <Row>
-                  <Col md={8}>
-                    <p className="mb-2">
-                      <strong>Version:</strong> <Badge bg="primary">v{pendingApproval.version}</Badge>
-                    </p>
-                    <p className="mb-2">
-                      <strong>Titel:</strong> {pendingApproval.title}
-                    </p>
-                    <p className="mb-2">
-                      <strong>Anmodet af:</strong> {pendingApproval.requestedByName} ({pendingApproval.requestedBy})
-                    </p>
-                    <p className="mb-2">
-                      <strong>Anmodet dato:</strong> {new Date(pendingApproval.requestedDate).toLocaleString('da-DK')}
-                    </p>
-                    <p className="mb-2">
-                      <strong>Politikker:</strong> {pendingApproval.policies.length} stk
-                    </p>
-                    <p className="mb-0">
-                      <strong>Completion:</strong> {pendingApproval.stats.percentage}% ({pendingApproval.stats.completed}/{pendingApproval.stats.total})
-                    </p>
-                  </Col>
-                  <Col md={4} className="text-end">
-                    <Button 
-                      variant="success" 
-                      onClick={approveReport}
-                      className="me-2 mb-2"
-                      size="lg"
-                    >
-                      <i className="fas fa-check me-2"></i>
-                      Godkend Rapport
-                    </Button>
-                    <Button 
-                      variant="danger" 
-                      onClick={rejectApproval}
-                      size="lg"
-                    >
-                      <i className="fas fa-times me-2"></i>
-                      Afvis
-                    </Button>
-                  </Col>
-                </Row>
-              </Alert>
-            </Col>
-          </Row>
-        )}
 
         {/* Statistics Cards */}
         <Row className="mb-4">
@@ -513,7 +428,11 @@ function ComplianceOverview() {
                             </small>
                           </td>
                           <td>
-                            <Badge bg={report.status === 'Publiceret' ? 'success' : 'warning'}>
+                            <Badge bg={
+                              report.status === 'Publiceret' ? 'success' : 
+                              report.status === 'Godkendt' ? 'info' : 
+                              'warning'
+                            }>
                               {report.status}
                             </Badge>
                           </td>
@@ -526,9 +445,21 @@ function ComplianceOverview() {
                             <div className="d-flex gap-2">
                               {report.status === 'Udkast' && (
                                 <Button
+                                  variant="primary"
+                                  size="sm"
+                                  onClick={() => approveIndividualReport(report.id)}
+                                  title="Godkend denne rapport"
+                                >
+                                  <i className="fas fa-check-circle me-1"></i>
+                                  Godkend
+                                </Button>
+                              )}
+                              {report.status === 'Godkendt' && (
+                                <Button
                                   variant="success"
                                   size="sm"
                                   onClick={() => publishReport(report.id)}
+                                  title="Publicer denne godkendte rapport"
                                 >
                                   <i className="fas fa-check me-1"></i>
                                   Publicer
@@ -546,6 +477,8 @@ function ComplianceOverview() {
                                 variant="outline-danger"
                                 size="sm"
                                 onClick={() => deleteReport(report.id)}
+                                disabled={report.status === 'Godkendt' || report.status === 'Publiceret'}
+                                title={report.status === 'Godkendt' || report.status === 'Publiceret' ? 'Godkendte/Publicerede rapporter kan ikke slettes' : 'Slet denne rapport'}
                               >
                                 <i className="fas fa-trash me-1"></i>
                                 Slet
@@ -646,17 +579,47 @@ function ComplianceOverview() {
           </Col>
         </Row>
       </Container>
-      
-      {/* Floating action button - Godkend */}
-      <div className="position-fixed bottom-0 end-0 m-4" style={{ zIndex: 1050 }}>
-        <Button
-          variant="success"
-          size="lg"
-          onClick={goToUdskriv}
-        >
-          Godkend
-        </Button>
-      </div>
+
+      {/* Modal til at oprette ny rapport */}
+      <Modal show={showCreateModal} onHide={() => setShowCreateModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>
+            <i className="fas fa-file-alt me-2"></i>
+            Opret Ny Rapport
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            <Form.Group className="mb-3">
+              <Form.Label>Rapporttitel</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="Indtast rapporttitel"
+                value={newReportTitle}
+                onChange={(e) => setNewReportTitle(e.target.value)}
+                autoFocus
+              />
+              <Form.Text className="text-muted">
+                Rapporten vil blive oprettet som udkast
+              </Form.Text>
+            </Form.Group>
+            <Alert variant="info">
+              <small>
+                <strong>Info:</strong> Rapporten indeholder {completedPolicies.length} udfyldte politikker ({stats.percentage}% færdig)
+              </small>
+            </Alert>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowCreateModal(false)}>
+            Annuller
+          </Button>
+          <Button variant="primary" onClick={confirmCreateReport}>
+            <i className="fas fa-save me-2"></i>
+            Opret Rapport
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </Layout>
   );
 }

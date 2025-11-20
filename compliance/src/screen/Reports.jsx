@@ -34,20 +34,6 @@ function Reports() {
     navigate('/compliance-overview');
   };
 
-  const publishReport = (reportId) => {
-    const updatedReports = savedReports.map(report => {
-      if (report.id === reportId) {
-        return { ...report, status: 'Publiceret', publishedDate: new Date().toISOString() };
-      }
-      return report;
-    });
-    
-    localStorage.setItem('gdpr_reports', JSON.stringify(updatedReports));
-    setSavedReports(updatedReports);
-    alert('Rapporten er nu publiceret!');
-  };
-
-
   const exportReport = (report) => {
     // Opret print-venlig HTML dokument
     const htmlContent = `
@@ -594,13 +580,6 @@ function Reports() {
               <i className="fas fa-arrow-left me-2"></i>
               Tilbage til Dashboard
             </Button>
-            <Button 
-              variant="primary" 
-              onClick={goToComplianceOverview}
-            >
-              <i className="fas fa-plus me-2"></i>
-              Opret Ny Rapport
-            </Button>
           </Col>
         </Row>
 
@@ -667,14 +646,6 @@ function Reports() {
                       Du har endnu ikke oprettet nogen rapporter. 
                       Gå til Compliance Oversigt for at oprette din første rapport.
                     </p>
-                    <Button 
-                      variant="primary" 
-                      size="lg"
-                      onClick={goToComplianceOverview}
-                    >
-                      <i className="fas fa-plus me-2"></i>
-                      Opret Din Første Rapport
-                    </Button>
                   </div>
                 ) : (
                   <Table responsive hover>
@@ -782,16 +753,6 @@ function Reports() {
                                 <i className="fas fa-eye me-1"></i>
                                 Vis
                               </Button>
-                              {report.status === 'Godkendt' && (
-                                <Button
-                                  variant="info"
-                                  size="sm"
-                                  onClick={() => publishReport(report.id)}
-                                >
-                                  <i className="fas fa-globe me-1"></i>
-                                  Publicer
-                                </Button>
-                              )}
                               <Button
                                 variant="outline-primary"
                                 size="sm"
@@ -800,6 +761,16 @@ function Reports() {
                                 <i className="fas fa-download me-1"></i>
                                 Download
                               </Button>
+                              {report.status === 'Godkendt' && (
+                                <Button
+                                  variant="outline-secondary"
+                                  size="sm"
+                                  onClick={goToComplianceOverview}
+                                >
+                                  <i className="fas fa-arrow-right me-1"></i>
+                                  Gå til Oversigt for at Publicere
+                                </Button>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -823,9 +794,10 @@ function Reports() {
                 </Alert.Heading>
                 <hr />
                 <ul className="mb-0">
-                  <li><strong>Godkendt:</strong> Rapporten er godkendt og klar til publicering. Viser hvem der godkendte og hvornår.</li>
+                  <li><strong>Godkendt:</strong> Rapporten er godkendt og klar til publicering. Gå til Compliance Oversigt for at publicere den.</li>
                   <li><strong>Publiceret:</strong> Rapporten er offentliggjort og officiel. Dette låser versionen.</li>
-                  <li><strong>Download:</strong> Eksporter rapporten som JSON fil til dokumentation eller backup.</li>
+                  <li><strong>Download:</strong> Eksporter rapporten som print-venlig HTML til dokumentation eller backup.</li>
+                  <li><strong>Vis:</strong> Se rapportens fulde indhold i et nyt vindue.</li>
                   <li><strong>Version:</strong> Hver rapport får automatisk et unikt versionsnummer (0.1, 0.2, osv.).</li>
                   <li><strong>Godkendelse:</strong> Alle rapporter skal godkendes før de får et versionsnummer.</li>
                 </ul>

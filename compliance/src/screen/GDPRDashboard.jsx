@@ -141,10 +141,6 @@ const GDPRDashboard = ({ orgId = 1 }) => {
     alert(`Showing implementation for Control ${controlCode}`);
   };
 
-  // Navigation to compliance overview
-  const goToComplianceOverview = () => {
-    navigate('/compliance-overview');
-  };
 
   // Navigation back to dashboard
   const goBackToDashboard = () => {
@@ -449,15 +445,6 @@ const GDPRDashboard = ({ orgId = 1 }) => {
               You have completed <strong>{getSavedPoliciesCount()}</strong> out of <strong>{getTotalSubcontrolsCount()}</strong> policies.
               View your compliance overview and export your policies.
             </p>
-            <Button 
-              variant="success" 
-              size="lg" 
-              onClick={goToComplianceOverview}
-              className="px-5"
-            >
-              <i className="fas fa-arrow-right me-2"></i>
-              Next: View Compliance Overview
-            </Button>
           </Card.Body>
         </Card>
       </div>
