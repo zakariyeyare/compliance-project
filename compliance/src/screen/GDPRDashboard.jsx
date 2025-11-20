@@ -268,7 +268,6 @@ const GDPRDashboard = ({ orgId = 1 }) => {
 
   // Beregn antal gemte policies
   const getSavedPoliciesCount = () => {
-<<<<<<< HEAD
     return Object.values(savedPolicies).filter(policy => {
       if (!policy) return false;
       
@@ -306,17 +305,6 @@ const GDPRDashboard = ({ orgId = 1 }) => {
     localStorage.setItem('gdpr_saved_policies', JSON.stringify(updatedSavedPolicies));
     setSavedPolicies(updatedSavedPolicies);
     setWorkingPolicies(updatedWorkingPolicies);
-=======
-    return Object.values(savedPolicies).filter((policy) => {
-      if (!policy) return false;
-      if (typeof policy === 'string') return policy.trim() !== '';
-      if (typeof policy === 'object') {
-        const content = policy.content ?? '';
-        return typeof content === 'string' ? content.trim() !== '' : true;
-      }
-      return false;
-    }).length;
->>>>>>> 499a7b70284ce5c48659c2430644fa743186eb79
   };
 
   // Beregn total antal subcontrols
