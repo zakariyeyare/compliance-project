@@ -1,16 +1,8 @@
-<<<<<<< HEAD
-import { useEffect, useState } from 'react'; // Tilføj React import
-import { Alert, Badge, Button, Card, Col, Container, Form, Row, Spinner } from 'react-bootstrap';
-import gdprSupabaseService from '../components/gdbrSupabase';
-import '../styles/Gdpr.css';
-=======
 import { useEffect, useState } from 'react';
-import { Card, Col, Container, Row } from 'react-bootstrap';
+import { Badge, Button, Card, Col, Container, Form, Row, Spinner } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import Supabase from '../SupabaseClient';
 import CustomCard from '../components/ui/CustomCard';
 import Layout from '../components/ui/Layout';
->>>>>>> e3cba1e304bb719155a71f303251f123d0e7fcc3
 
 const GDPRDashboard = ({ orgId = 1 }) => { // Default til orgId 1
   const [gdprData, setGdprData] = useState(null);
@@ -18,9 +10,50 @@ const GDPRDashboard = ({ orgId = 1 }) => { // Default til orgId 1
   const [workingPolicies, setWorkingPolicies] = useState({}); // Tekst der redigeres
   const [savedPolicies, setSavedPolicies] = useState({}); // Tekst der er gemt
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [saving, setSaving] = useState({});
-  const [saveMode, setSaveMode] = useState('local'); // 'local' eller 'database'
+  const navigate = useNavigate();
+
+  const loadGDPRData = async () => {
+    setLoading(false);
+    // Placeholder - implement actual GDPR data loading
+  };
+
+  const loadWorkingPolicies = () => {
+    // Placeholder - implement actual working policies loading
+  };
+
+  const toggleControl = (code) => {
+    setExpandedControls(prev => ({
+      ...prev,
+      [code]: !prev[code]
+    }));
+  };
+
+  const showImplementation = (code) => {
+    alert(`Vis implementering for ${code}`);
+  };
+
+  const handlePolicyChange = (id, value) => {
+    setWorkingPolicies(prev => ({
+      ...prev,
+      [id]: value
+    }));
+  };
+
+  const savePolicyContent = (id) => {
+    setSaving(prev => ({ ...prev, [id]: true }));
+    setTimeout(() => {
+      setSavedPolicies(prev => ({
+        ...prev,
+        [id]: workingPolicies[id]
+      }));
+      localStorage.setItem('gdpr_saved_policies', JSON.stringify({
+        ...savedPolicies,
+        [id]: workingPolicies[id]
+      }));
+      setSaving(prev => ({ ...prev, [id]: false }));
+    }, 500);
+  };
 
   useEffect(() => {
     loadGDPRData();
@@ -37,179 +70,31 @@ const GDPRDashboard = ({ orgId = 1 }) => { // Default til orgId 1
     }
   }, [orgId]);
 
-<<<<<<< HEAD
-  const loadGDPRData = async () => {
-    try {
-      setLoading(true);
-      const data = await gdprSupabaseService.getGDPRFullStructure();
-      setGdprData(data);
-      
-      // Auto-expand first control for demo
-      if (data?.controls?.length > 0) {
-        setExpandedControls({ [data.controls[0].code]: true });
-      }
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadWorkingPolicies = async () => {
-    try {
-      const policies = await gdprSupabaseService.getWorkingPolicies(orgId);
-      const policiesMap = {};
-      policies.forEach(policy => {
-        policiesMap[policy.subcontrol_id] = policy.content;
-      });
-      setWorkingPolicies(policiesMap);
-    } catch (err) {
-      console.error('Error loading policies:', err);
-      setWorkingPolicies({});
-    }
-  };
-
-  const toggleControl = (controlCode) => {
-    setExpandedControls(prev => ({
-      ...prev,
-      [controlCode]: !prev[controlCode]
-    }));
-  };
-
-  const handlePolicyChange = (subcontrolId, content) => {
-    setWorkingPolicies(prev => ({
-      ...prev,
-      [subcontrolId]: content
-    }));
-  };
-
-  const savePolicyContent = async (subcontrolId, ordinal) => {
-    try {
-      setSaving(prev => ({ ...prev, [subcontrolId]: true }));
-      
-      const contentToSave = workingPolicies[subcontrolId] || '';
-      
-      if (saveMode === 'local') {
-        // Gem lokalt i browseren
-        const updatedSavedPolicies = {
-          ...savedPolicies,
-          [subcontrolId]: contentToSave
-        };
-        localStorage.setItem('gdpr_saved_policies', JSON.stringify(updatedSavedPolicies));
-        setSavedPolicies(updatedSavedPolicies);
-        
-        setTimeout(() => {
-          setSaving(prev => ({ ...prev, [subcontrolId]: false }));
-        }, 800);
-      } else {
-        // Forsøg at gemme i database
-        await gdprSupabaseService.upsertWorkingPolicy(
-          orgId,
-          subcontrolId,
-          contentToSave,
-          ordinal
-        );
-        
-        setSavedPolicies(prev => ({
-          ...prev,
-          [subcontrolId]: contentToSave
-        }));
-        
-        setTimeout(() => {
-          setSaving(prev => ({ ...prev, [subcontrolId]: false }));
-        }, 1500);
-      }
-      
-    } catch (err) {
-      console.error('Fejl ved gemning:', err);
-      
-      // Fallback til lokal gemning hvis database fejler
-      const updatedSavedPolicies = {
-        ...savedPolicies,
-        [subcontrolId]: workingPolicies[subcontrolId] || ''
-      };
-      localStorage.setItem('gdpr_saved_policies', JSON.stringify(updatedSavedPolicies));
-      setSavedPolicies(updatedSavedPolicies);
-      setSaveMode('local');
-      
-      alert('Database fejl - dine ændringer gemmes lokalt i browseren. Kontakt administrator for at fikse database problemet.');
-      setSaving(prev => ({ ...prev, [subcontrolId]: false }));
-    }
-  };
-
-  const showImplementation = (controlCode) => {
-    alert(`Viser implementering for Kontrolmål ${controlCode}`);
-=======
   const handleChooseCompliance = () => {
     navigate('/gdpr-compliance');
->>>>>>> e3cba1e304bb719155a71f303251f123d0e7fcc3
   };
 
   if (loading) {
     return (
-<<<<<<< HEAD
-      <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
-        <div className="text-center">
-          <Spinner animation="border" variant="primary" />
-          <div className="mt-2">Indlæser GDPR dashboard...</div>
-        </div>
-      </Container>
-    );
-  }
-
-  if (error) {
-    return (
-      <Container className="mt-4">
-        <Alert variant="danger">
-          <Alert.Heading>Fejl ved indlæsning</Alert.Heading>
-          <p>Kunne ikke indlæse GDPR compliance data: {error}</p>
-          <Button variant="outline-danger" onClick={loadGDPRData}>
-            Prøv igen
-          </Button>
-        </Alert>
-      </Container>
-=======
       <Layout title="Dashboard">
         <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
           <div>Indlæser...</div>
         </Container>
       </Layout>
->>>>>>> e3cba1e304bb719155a71f303251f123d0e7fcc3
     );
   }
 
   return (
-<<<<<<< HEAD
-    <Container fluid className="gdpr-dashboard mt-4">
-      {/* Header */}
-      <div className="dashboard-header mb-4">
-        <Row className="align-items-center">
-          <Col md={8}>
-            <h2 className="text-primary mb-1">{gdprData?.title}</h2>
-            <p className="text-muted mb-0">
-              Standard: <strong>{gdprData?.code}</strong> | 
-              Kontrolmål: <strong>{gdprData?.controls?.length || 0}</strong>
-            </p>
-          </Col>
-          <Col md={4} className="text-end">
-            <Badge bg="info" className="fs-6 px-3 py-2">
-              GDPR Compliance Dashboard
-            </Badge>
-=======
     <Layout title="Dashboard">
       <Container>
         <Row className="mb-4">
           <Col>
             <h1>Dashboard</h1>
             <p className="text-muted">Welcome to your compliance dashboard</p>
->>>>>>> e3cba1e304bb719155a71f303251f123d0e7fcc3
           </Col>
         </Row>
         
 
-<<<<<<< HEAD
-      </div>
-=======
         <Row>
           <Col md={4} className="mb-4">
             <CustomCard
@@ -230,7 +115,6 @@ const GDPRDashboard = ({ orgId = 1 }) => { // Default til orgId 1
             />
           </Col>
         </Row>
->>>>>>> e3cba1e304bb719155a71f303251f123d0e7fcc3
 
       {/* Dashboard Rows */}
       {gdprData?.controls?.map((control) => (
@@ -351,7 +235,7 @@ const GDPRDashboard = ({ orgId = 1 }) => { // Default til orgId 1
                                 <Button
                                   variant={saving[subcontrol.id] ? 'success' : 'primary'}
                                   size="sm"
-                                  onClick={() => savePolicyContent(subcontrol.id, subIdx + 1)}
+                                  onClick={() => savePolicyContent(subcontrol.id)}
                                   disabled={saving[subcontrol.id]}
                                   className="save-btn"
                                 >
@@ -404,26 +288,12 @@ const GDPRDashboard = ({ orgId = 1 }) => { // Default til orgId 1
                   ))
                 )}
               </Card.Body>
-<<<<<<< HEAD
             )}
           </Card>
         </div>
       ))}
-
-      {gdprData?.controls?.length === 0 && (
-        <Alert variant="info" className="text-center">
-          <h5>Ingen kontrolmål fundet</h5>
-          <p>Der blev ikke fundet nogen GDPR kontrolmål i databasen.</p>
-        </Alert>
-      )}
-    </Container>
-=======
-            </Card>
-          </Col>
-        </Row>
       </Container>
     </Layout>
->>>>>>> e3cba1e304bb719155a71f303251f123d0e7fcc3
   );
 };
 

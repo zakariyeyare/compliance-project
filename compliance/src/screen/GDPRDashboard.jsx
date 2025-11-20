@@ -1,41 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, Badge, Button, Card, Col, Container, Form, Row, Spinner } from 'react-bootstrap';
-<<<<<<< HEAD
-=======
 import { useNavigate } from 'react-router-dom'; // Tilføj navigation
->>>>>>> e3cba1e304bb719155a71f303251f123d0e7fcc3
 import gdprSupabaseService from '../components/gdbrSupabase';
 import Layout from '../components/ui/Layout';
 import '../styles/Gdpr.css';
 
-<<<<<<< HEAD
-const GDPRDashboard = ({ orgId = 1 }) => { // Default til orgId 1
-  const [gdprData, setGdprData] = useState(null);
-  const [expandedControls, setExpandedControls] = useState({});
-  const [workingPolicies, setWorkingPolicies] = useState({}); // Tekst der redigeres
-  const [savedPolicies, setSavedPolicies] = useState({}); // Tekst der er gemt
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [saving, setSaving] = useState({});
-  const [saveMode, setSaveMode] = useState('local'); // 'local' eller 'database'
-
-  useEffect(() => {
-    loadGDPRData();
-    // Forsøg at indlæse gemte policies fra localStorage
-    const savedPoliciesData = localStorage.getItem('gdpr_saved_policies');
-    if (savedPoliciesData) {
-      const parsed = JSON.parse(savedPoliciesData);
-      setSavedPolicies(parsed);
-      setWorkingPolicies(parsed); // Start med samme data i redigeringsfeltet
-    }
-    
-    if (orgId) {
-      loadWorkingPolicies();
-    }
-  }, [orgId]);
-
-  const loadGDPRData = async () => {
-=======
 const GDPRDashboard = ({ orgId = 1 }) => {
   const navigate = useNavigate(); // Navigation hook
   const [gdprData, setGdprData] = useState(null);
@@ -48,7 +17,6 @@ const GDPRDashboard = ({ orgId = 1 }) => {
   const [saveMode, setSaveMode] = useState('local');
 
   const loadGDPRData = useCallback(async () => {
->>>>>>> e3cba1e304bb719155a71f303251f123d0e7fcc3
     try {
       setLoading(true);
       const data = await gdprSupabaseService.getGDPRFullStructure();
@@ -114,10 +82,6 @@ const GDPRDashboard = ({ orgId = 1 }) => {
       
       const contentToSave = workingPolicies[subcontrolId] || '';
       
-<<<<<<< HEAD
-      if (saveMode === 'local') {
-        // Gem lokalt i browseren
-=======
       // Check if there is content to save
       if (!contentToSave.trim()) {
         alert('Cannot save an empty policy. Please write some content first.');
@@ -127,7 +91,6 @@ const GDPRDashboard = ({ orgId = 1 }) => {
       
       if (saveMode === 'local') {
         // Save locally in browser
->>>>>>> e3cba1e304bb719155a71f303251f123d0e7fcc3
         const updatedSavedPolicies = {
           ...savedPolicies,
           [subcontrolId]: contentToSave
@@ -139,11 +102,7 @@ const GDPRDashboard = ({ orgId = 1 }) => {
           setSaving(prev => ({ ...prev, [subcontrolId]: false }));
         }, 800);
       } else {
-<<<<<<< HEAD
-        // Forsøg at gemme i database
-=======
         // Attempt to save in database
->>>>>>> e3cba1e304bb719155a71f303251f123d0e7fcc3
         await gdprSupabaseService.upsertWorkingPolicy(
           orgId,
           subcontrolId,
@@ -162,15 +121,9 @@ const GDPRDashboard = ({ orgId = 1 }) => {
       }
       
     } catch (err) {
-<<<<<<< HEAD
-      console.error('Fejl ved gemning:', err);
-      
-      // Fallback til lokal gemning hvis database fejler
-=======
       console.error('Error saving:', err);
       
       // Fallback to local saving if database fails
->>>>>>> e3cba1e304bb719155a71f303251f123d0e7fcc3
       const updatedSavedPolicies = {
         ...savedPolicies,
         [subcontrolId]: workingPolicies[subcontrolId] || ''
@@ -179,19 +132,12 @@ const GDPRDashboard = ({ orgId = 1 }) => {
       setSavedPolicies(updatedSavedPolicies);
       setSaveMode('local');
       
-<<<<<<< HEAD
-      alert('Database fejl - dine ændringer gemmes lokalt i browseren. Kontakt administrator for at fikse database problemet.');
-=======
       alert('Database error - your changes are saved locally in the browser. Contact administrator to fix database issue.');
->>>>>>> e3cba1e304bb719155a71f303251f123d0e7fcc3
       setSaving(prev => ({ ...prev, [subcontrolId]: false }));
     }
   };
 
   const showImplementation = (controlCode) => {
-<<<<<<< HEAD
-    alert(`Viser implementering for Kontrolmål ${controlCode}`);
-=======
     alert(`Showing implementation for Control ${controlCode}`);
   };
 
@@ -226,7 +172,6 @@ const GDPRDashboard = ({ orgId = 1 }) => {
       total += control.subcontrols?.length || 0;
     });
     return total;
->>>>>>> e3cba1e304bb719155a71f303251f123d0e7fcc3
   };
 
   if (loading) {
@@ -262,9 +207,6 @@ const GDPRDashboard = ({ orgId = 1 }) => {
       {/* Header with navigation */}
       <div className="dashboard-header mb-4">
         <Row className="align-items-center">
-<<<<<<< HEAD
-          <Col md={8}>
-=======
           <Col md={2}>
             <Button 
               variant="outline-secondary" 
@@ -276,7 +218,6 @@ const GDPRDashboard = ({ orgId = 1 }) => {
             </Button>
           </Col>
           <Col md={6}>
->>>>>>> e3cba1e304bb719155a71f303251f123d0e7fcc3
             <h2 className="text-primary mb-1">{gdprData?.title}</h2>
             <p className="text-muted mb-0">
               Standard: <strong>{gdprData?.code}</strong> | 
@@ -289,11 +230,6 @@ const GDPRDashboard = ({ orgId = 1 }) => {
             </Badge>
           </Col>
         </Row>
-<<<<<<< HEAD
-        
-
-=======
->>>>>>> e3cba1e304bb719155a71f303251f123d0e7fcc3
       </div>
 
       {/* Dashboard Rows */}
@@ -413,11 +349,7 @@ const GDPRDashboard = ({ orgId = 1 }) => {
                               />
                               <div className="mt-2">
                                 <Button
-<<<<<<< HEAD
-                                  variant={saving[subcontrol.id] ? 'success' : 'primary'}
-=======
                                   variant={saving[subcontrol.id] ? 'success' : (savedPolicies[subcontrol.id] && typeof savedPolicies[subcontrol.id] === 'string' && savedPolicies[subcontrol.id].trim() !== '' ? 'warning' : 'primary')}
->>>>>>> e3cba1e304bb719155a71f303251f123d0e7fcc3
                                   size="sm"
                                   onClick={() => savePolicyContent(subcontrol.id, subIdx + 1)}
                                   disabled={saving[subcontrol.id]}
@@ -432,25 +364,17 @@ const GDPRDashboard = ({ orgId = 1 }) => {
                                         role="status"
                                         className="me-2"
                                       />
-<<<<<<< HEAD
-                                      Gemmer...
-=======
                                       Saving...
                                     </>
                                   ) : savedPolicies[subcontrol.id] && typeof savedPolicies[subcontrol.id] === 'string' && savedPolicies[subcontrol.id].trim() !== '' ? (
                                     <>
                                       <i className="fas fa-edit me-2"></i>
                                       Update
->>>>>>> e3cba1e304bb719155a71f303251f123d0e7fcc3
                                     </>
                                   ) : (
                                     <>
                                       <i className="fas fa-save me-2"></i>
-<<<<<<< HEAD
-                                      Gem
-=======
                                       Save
->>>>>>> e3cba1e304bb719155a71f303251f123d0e7fcc3
                                     </>
                                   )}
                                 </Button>
@@ -458,17 +382,6 @@ const GDPRDashboard = ({ orgId = 1 }) => {
                                   <div className="mt-2">
                                     <small className="text-success">
                                       <i className="fas fa-check-circle me-1"></i>
-<<<<<<< HEAD
-                                      Gemmer dine ændringer...
-                                    </small>
-                                  </div>
-                                )}
-                                {!saving[subcontrol.id] && savedPolicies[subcontrol.id] && (
-                                  <div className="mt-2 p-2 bg-light border rounded">
-                                    <small className="text-muted d-block mb-1">
-                                      <strong>Gemt:</strong>
-                                    </small>
-=======
                                       Saving your changes...
                                     </small>
                                   </div>
@@ -490,7 +403,6 @@ const GDPRDashboard = ({ orgId = 1 }) => {
                                         Delete
                                       </Button>
                                     </div>
->>>>>>> e3cba1e304bb719155a71f303251f123d0e7fcc3
                                     <small className="text-dark">
                                       {savedPolicies[subcontrol.id]}
                                     </small>
