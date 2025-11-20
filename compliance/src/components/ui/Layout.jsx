@@ -1,6 +1,6 @@
 import { Button, Container, Nav, Navbar } from 'react-bootstrap';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { useAuth } from '../AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 
 function Layout({ title, actions, children, fluid = false }) {
   const navigate = useNavigate();
