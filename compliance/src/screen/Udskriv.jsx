@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import gdprSupabaseService from '../components/gdbrSupabase';
+import Supabase from '../SupabaseClient';
 
 function formatDate(value) {
   try {
@@ -17,13 +18,44 @@ export default function Udskriv() {
   const [completedPolicies, setCompletedPolicies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
+  const [currentUserName, setCurrentUserName] = useState(name || '');
+  const [approvalMeta, setApprovalMeta] = useState({
+    standard: standard || 'GDPR',
+    dato,
+    godkendtAf,
+  });
 
   const resolved = {
-    name: name || 'Saim',
-    standard: standard || 'GDPR',
-    dato: formatDate(dato),
-    godkendtAf: godkendtAf || 'Abdirahim',
+    name: currentUserName || name || 'Saim',
+    standard: approvalMeta.standard || 'GDPR',
+    dato: formatDate(approvalMeta.dato || approvalMeta.approvedDate || dato),
+    godkendtAf: approvalMeta.godkendtAf || 'Abdirahim',
   };
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const { data: { user } } = await Supabase.auth.getUser();
+        setCurrentUserName(user?.user_metadata?.full_name || user?.email || 'Ukendt bruger');
+      } catch (error) {
+        console.error('Fejl ved hentning af bruger:', error);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+  useEffect(() => {
+    const receiptRaw = localStorage.getItem('gdpr_last_receipt');
+    if (receiptRaw) {
+      try {
+        const parsed = JSON.parse(receiptRaw);
+        setApprovalMeta((prev) => ({ ...prev, ...parsed }));
+      } catch (error) {
+        console.error('Fejl ved indlæsning af seneste godkendelse:', error);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const loadPolicies = async () => {

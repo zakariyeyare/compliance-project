@@ -104,6 +104,22 @@ function ComplianceOverview() {
     navigate('/gdpr-compliance');
   };
 
+  const goToUdskriv = () => {
+    const receiptRaw = localStorage.getItem('gdpr_last_receipt');
+    if (!receiptRaw) {
+      alert('Der er ingen godkendt rapport at udskrive endnu. Godkend en rapport først.');
+      return;
+    }
+
+    try {
+      const receiptData = JSON.parse(receiptRaw);
+      navigate('/udskriv', { state: receiptData });
+    } catch (error) {
+      console.error('Kunne ikke parse seneste godkendelse:', error);
+      navigate('/udskriv');
+    }
+  };
+
   const requestApproval = () => {
     const completedPolicies = getCompletedPolicies();
     
@@ -154,6 +170,14 @@ function ComplianceOverview() {
       createdDate: new Date().toISOString(),
       status: 'Godkendt'
     };
+
+    const receiptMeta = {
+      standard: pendingApproval.standard || 'GDPR',
+      godkendtAf: approvedReport.approvedByName,
+      godkendtAfEmail: approvedReport.approvedBy,
+      dato: approvedReport.approvedDate,
+    };
+    localStorage.setItem('gdpr_last_receipt', JSON.stringify(receiptMeta));
 
     const updatedReports = [...savedReports, approvedReport];
     localStorage.setItem('gdpr_reports', JSON.stringify(updatedReports));
@@ -628,7 +652,7 @@ function ComplianceOverview() {
         <Button
           variant="success"
           size="lg"
-          onClick={() => navigate('/udskriv')}
+          onClick={goToUdskriv}
         >
           Godkend
         </Button>
