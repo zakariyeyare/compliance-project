@@ -1,0 +1,27 @@
+:root {
+  --brand-primary: #0d6efd;
+  --brand-dark: #0b172a;
+  --text-muted: #6c757d;
+}
+
+.page-container {
+  padding-bottom: 32px;
+}
+
+.page-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--brand-primary);
+}
+
+.section-card {
+  border-radius: 8px;
+}
+
+.table thead.table-dark th {
+  vertical-align: middle;
+}
+
+/* Utility spacing for consistent gaps */
+.gap-2 { gap: .5rem; }
+.gap-3 { gap: 1rem; }

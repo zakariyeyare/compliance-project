@@ -1,7 +1,16 @@
+<<<<<<< HEAD
 import { useEffect, useState } from 'react'; // Tilføj React import
 import { Alert, Badge, Button, Card, Col, Container, Form, Row, Spinner } from 'react-bootstrap';
 import gdprSupabaseService from '../components/gdbrSupabase';
 import '../styles/Gdpr.css';
+=======
+import { useEffect, useState } from 'react';
+import { Card, Col, Container, Row } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
+import Supabase from '../SupabaseClient';
+import CustomCard from '../components/ui/CustomCard';
+import Layout from '../components/ui/Layout';
+>>>>>>> e3cba1e304bb719155a71f303251f123d0e7fcc3
 
 const GDPRDashboard = ({ orgId = 1 }) => { // Default til orgId 1
   const [gdprData, setGdprData] = useState(null);
@@ -28,6 +37,7 @@ const GDPRDashboard = ({ orgId = 1 }) => { // Default til orgId 1
     }
   }, [orgId]);
 
+<<<<<<< HEAD
   const loadGDPRData = async () => {
     try {
       setLoading(true);
@@ -129,10 +139,15 @@ const GDPRDashboard = ({ orgId = 1 }) => { // Default til orgId 1
 
   const showImplementation = (controlCode) => {
     alert(`Viser implementering for Kontrolmål ${controlCode}`);
+=======
+  const handleChooseCompliance = () => {
+    navigate('/gdpr-compliance');
+>>>>>>> e3cba1e304bb719155a71f303251f123d0e7fcc3
   };
 
   if (loading) {
     return (
+<<<<<<< HEAD
       <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
         <div className="text-center">
           <Spinner animation="border" variant="primary" />
@@ -153,10 +168,18 @@ const GDPRDashboard = ({ orgId = 1 }) => { // Default til orgId 1
           </Button>
         </Alert>
       </Container>
+=======
+      <Layout title="Dashboard">
+        <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
+          <div>Indlæser...</div>
+        </Container>
+      </Layout>
+>>>>>>> e3cba1e304bb719155a71f303251f123d0e7fcc3
     );
   }
 
   return (
+<<<<<<< HEAD
     <Container fluid className="gdpr-dashboard mt-4">
       {/* Header */}
       <div className="dashboard-header mb-4">
@@ -172,11 +195,42 @@ const GDPRDashboard = ({ orgId = 1 }) => { // Default til orgId 1
             <Badge bg="info" className="fs-6 px-3 py-2">
               GDPR Compliance Dashboard
             </Badge>
+=======
+    <Layout title="Dashboard">
+      <Container>
+        <Row className="mb-4">
+          <Col>
+            <h1>Dashboard</h1>
+            <p className="text-muted">Welcome to your compliance dashboard</p>
+>>>>>>> e3cba1e304bb719155a71f303251f123d0e7fcc3
           </Col>
         </Row>
         
 
+<<<<<<< HEAD
       </div>
+=======
+        <Row>
+          <Col md={4} className="mb-4">
+            <CustomCard
+              title="Choose Compliance"
+              onClick={handleChooseCompliance}
+            />
+          </Col>
+          <Col md={4} className="mb-4">
+            <CustomCard
+              title="All Reports"
+              onClick={() => navigate('/reports')}
+            />
+          </Col>
+          <Col md={4} className="mb-4">
+            <CustomCard
+              title="Settings"
+              onClick={() => alert('Settings clicked')}
+            />
+          </Col>
+        </Row>
+>>>>>>> e3cba1e304bb719155a71f303251f123d0e7fcc3
 
       {/* Dashboard Rows */}
       {gdprData?.controls?.map((control) => (
@@ -350,6 +404,7 @@ const GDPRDashboard = ({ orgId = 1 }) => { // Default til orgId 1
                   ))
                 )}
               </Card.Body>
+<<<<<<< HEAD
             )}
           </Card>
         </div>
@@ -362,6 +417,13 @@ const GDPRDashboard = ({ orgId = 1 }) => { // Default til orgId 1
         </Alert>
       )}
     </Container>
+=======
+            </Card>
+          </Col>
+        </Row>
+      </Container>
+    </Layout>
+>>>>>>> e3cba1e304bb719155a71f303251f123d0e7fcc3
   );
 };
 
