@@ -14,25 +14,50 @@ function formatDate(value) {
 
 export default function Udskriv() {
   const location = useLocation();
-  const { name, standard, dato, godkendtAf } = location?.state || {};
-  const [completedPolicies, setCompletedPolicies] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    report: navigationReport,
+    name: navigationName,
+    standard: navigationStandard,
+    dato: navigationDate,
+    godkendtAf: navigationApprover,
+  } = location?.state || {};
+
+  const [reportData, setReportData] = useState(navigationReport || null);
+  const [completedPolicies, setCompletedPolicies] = useState(navigationReport?.policies || []);
+  const [loading, setLoading] = useState(!navigationReport);
   const [loadError, setLoadError] = useState(null);
-  const [currentUserName, setCurrentUserName] = useState(name || '');
+  const [currentUserName, setCurrentUserName] = useState(
+    navigationName ||
+      navigationReport?.requestedByName ||
+      navigationReport?.requestedBy ||
+      ''
+  );
   const [approvalMeta, setApprovalMeta] = useState({
-    standard: standard || 'GDPR',
-    dato,
-    godkendtAf,
+    standard: navigationStandard || navigationReport?.standard || 'GDPR',
+    dato:
+      navigationDate ||
+      navigationReport?.publishedDate ||
+      navigationReport?.approvedDate ||
+      navigationReport?.createdDate,
+    godkendtAf:
+      navigationApprover ||
+      navigationReport?.approvedByName ||
+      navigationReport?.approvedBy ||
+      '',
   });
 
   const resolved = {
-    name: currentUserName || name || 'Saim',
+    name: currentUserName || 'Ukendt bruger',
     standard: approvalMeta.standard || 'GDPR',
-    dato: formatDate(approvalMeta.dato || approvalMeta.approvedDate || dato),
-    godkendtAf: approvalMeta.godkendtAf || 'Abdirahim',
+    dato: formatDate(approvalMeta.dato || new Date()),
+    godkendtAf: approvalMeta.godkendtAf || 'Ukendt',
   };
 
   useEffect(() => {
+    if (currentUserName) {
+      return;
+    }
+
     const fetchUser = async () => {
       try {
         const { data: { user } } = await Supabase.auth.getUser();
@@ -43,21 +68,81 @@ export default function Udskriv() {
     };
 
     fetchUser();
-  }, []);
+  }, [currentUserName]);
 
   useEffect(() => {
-    const receiptRaw = localStorage.getItem('gdpr_last_receipt');
-    if (receiptRaw) {
+    if (navigationReport) {
+      const derivedPayload = {
+        name:
+          navigationName ||
+          navigationReport.requestedByName ||
+          navigationReport.requestedBy ||
+          'Ukendt bruger',
+        standard: navigationStandard || navigationReport.standard || 'GDPR',
+        dato:
+          navigationDate ||
+          navigationReport.publishedDate ||
+          navigationReport.approvedDate ||
+          navigationReport.createdDate,
+        godkendtAf:
+          navigationApprover ||
+          navigationReport.approvedByName ||
+          navigationReport.approvedBy ||
+          '',
+        report: navigationReport,
+      };
+
       try {
-        const parsed = JSON.parse(receiptRaw);
-        setApprovalMeta((prev) => ({ ...prev, ...parsed }));
+        localStorage.setItem('gdpr_last_receipt', JSON.stringify(derivedPayload));
       } catch (error) {
-        console.error('Fejl ved indlæsning af seneste godkendelse:', error);
+        console.error('Fejl ved lagring af kvitteringsdata:', error);
       }
+
+      setReportData(navigationReport);
+      setCompletedPolicies(navigationReport.policies || []);
+      setApprovalMeta({
+        standard: derivedPayload.standard,
+        dato: derivedPayload.dato,
+        godkendtAf: derivedPayload.godkendtAf,
+      });
+      setCurrentUserName((prev) => prev || derivedPayload.name);
+      setLoading(false);
+      setLoadError(null);
+      return;
     }
-  }, []);
+
+    const receiptRaw = localStorage.getItem('gdpr_last_receipt');
+    if (!receiptRaw) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(receiptRaw);
+      if (parsed.report) {
+        setReportData(parsed.report);
+        setCompletedPolicies(parsed.report.policies || []);
+      }
+      setApprovalMeta((prev) => ({
+        standard: parsed.standard || prev.standard,
+        dato: parsed.dato || prev.dato,
+        godkendtAf: parsed.godkendtAf || prev.godkendtAf,
+      }));
+      if (parsed.name) {
+        setCurrentUserName((prev) => prev || parsed.name);
+      }
+    } catch (error) {
+      console.error('Fejl ved indlæsning af seneste godkendelse:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [navigationReport, navigationName, navigationStandard, navigationDate, navigationApprover]);
 
   useEffect(() => {
+    if (navigationReport || completedPolicies.length > 0) {
+      return;
+    }
+
     const loadPolicies = async () => {
       try {
         setLoading(true);
@@ -104,7 +189,7 @@ export default function Udskriv() {
     };
 
     loadPolicies();
-  }, []);
+  }, [navigationReport, completedPolicies]);
 
   const policiesForMail = useMemo(() => {
     if (!completedPolicies.length) return '- Ingen politikker udfyldt';
@@ -126,30 +211,56 @@ export default function Udskriv() {
       .join('\n');
   }, [completedPolicies]);
 
+  const completionPercent = useMemo(() => {
+    if (typeof reportData?.stats?.percentage === 'number') {
+      return reportData.stats.percentage;
+    }
+    if (!completedPolicies.length) {
+      return 0;
+    }
+    const denominator = reportData?.stats?.total || completedPolicies.length;
+    if (!denominator) {
+      return 0;
+    }
+    return Math.min(100, Math.round((completedPolicies.length / denominator) * 100));
+  }, [reportData, completedPolicies.length]);
+
   const handlePrint = () => {
     window.print();
   };
 
   const handleMail = () => {
     const subject = encodeURIComponent('Compliance Receipt');
-    const body = encodeURIComponent(
-      [
-        'Hej,',
-        '',
-        'Vedhæftet finder du PDF-kvittering.',
-        '',
-        'Detaljer:',
-        `- Navn: ${resolved.name}`,
-        `- Standard: ${resolved.standard}`,
-        `- Dato: ${resolved.dato}`,
-        `- Godkendt af: ${resolved.godkendtAf}`,
-        '',
-        'Udfyldte Politikker:',
-        policiesForMail,
-        '',
-        'Venlig hilsen',
-      ].join('\n')
+    const lines = [
+      'Hej,',
+      '',
+      'Vedhæftet finder du PDF-kvittering.',
+      '',
+      'Detaljer:',
+      `- Navn: ${resolved.name}`,
+      `- Standard: ${resolved.standard}`,
+      `- Dato: ${resolved.dato}`,
+      `- Godkendt af: ${resolved.godkendtAf || 'Ikke godkendt'}`,
+    ];
+
+    if (reportData) {
+      lines.push(
+        `- Rapport: ${reportData.title || 'Ukendt titel'}`,
+        `- Version: ${reportData.version || 'N/A'}`,
+        `- Status: ${reportData.status || 'N/A'}`,
+        `- Politikker: ${reportData.policies?.length ?? completedPolicies.length}`
+      );
+    }
+
+    lines.push(
+      '',
+      'Udfyldte Politikker:',
+      policiesForMail,
+      '',
+      'Venlig hilsen'
     );
+
+    const body = encodeURIComponent(lines.join('\n'));
 
     // Opens the default mail client. Note: Attaching a generated PDF requires a backend or user to attach manually.
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
@@ -178,6 +289,28 @@ export default function Udskriv() {
             <span className="value">{resolved.godkendtAf}</span>
           </div>
         </div>
+
+        {reportData && (
+          <div className="summary-grid">
+            <div className="summary-card accent">
+              <span className="summary-label">Rapport</span>
+              <span className="summary-value">{reportData.title || 'GDPR Rapport'}</span>
+              <span className="summary-pill">v{reportData.version || 'N/A'}</span>
+            </div>
+            <div className="summary-card">
+              <span className="summary-label">Status</span>
+              <span className="summary-value">{reportData.status || 'Draft'}</span>
+            </div>
+            <div className="summary-card">
+              <span className="summary-label">Politikker</span>
+              <span className="summary-value">{reportData.policies?.length ?? completedPolicies.length}</span>
+            </div>
+            <div className="summary-card">
+              <span className="summary-label">Færdiggørelse</span>
+              <span className="summary-value">{completionPercent}%</span>
+            </div>
+          </div>
+        )}
 
         <div className="btn-row no-print">
           <button className="print-btn" onClick={handlePrint}>Udskriv</button>
@@ -290,6 +423,54 @@ export default function Udskriv() {
         .value {
           color: #111827;
           font-weight: 500;
+        }
+
+        .summary-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+          gap: 16px;
+          margin-bottom: 32px;
+        }
+
+        .summary-card {
+          background-color: #f8fafc;
+          border: 1px solid #e2e8f0;
+          border-radius: 16px;
+          padding: 18px;
+          text-align: left;
+          color: #0f172a;
+        }
+
+        .summary-card.accent {
+          background: linear-gradient(135deg, #2563EB, #7c3aed);
+          color: white;
+          border: none;
+        }
+
+        .summary-label {
+          font-size: 12px;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          opacity: 0.8;
+          display: block;
+        }
+
+        .summary-value {
+          font-size: 20px;
+          font-weight: 700;
+          margin-top: 6px;
+          display: block;
+        }
+
+        .summary-pill {
+          margin-top: 10px;
+          display: inline-block;
+          padding: 6px 12px;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.2);
+          color: inherit;
+          font-weight: 600;
+          font-size: 14px;
         }
 
         .btn-row {
