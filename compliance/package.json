@@ -10,6 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@supabase/auth-js": "^2.86.0",
+    "@supabase/functions-js": "^2.86.0",
+    "@supabase/postgrest-js": "^2.86.0",
+    "@supabase/realtime-js": "^2.86.0",
     "@supabase/supabase-js": "^2.77.0",
     "bootstrap": "^5.3.8",
     "react": "^19.1.1",
