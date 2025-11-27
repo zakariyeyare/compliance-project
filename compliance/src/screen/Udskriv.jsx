@@ -1,7 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 import gdprSupabaseService from '../components/gdbrSupabase';
 import Supabase from '../SupabaseClient';
+
+const EMAIL_API_BASE = (import.meta.env.VITE_EMAIL_API_BASE || '/api').replace(/\/$/, '');
+const EMAIL_SEND_ENDPOINT = `${EMAIL_API_BASE}/send-receipt`;
 
 function formatDate(value) {
   try {
@@ -11,6 +16,14 @@ function formatDate(value) {
     return String(value || '');
   }
 }
+
+const blobToBase64 = (blob) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
 
 export default function Udskriv() {
   const location = useLocation();
@@ -45,6 +58,12 @@ export default function Udskriv() {
       navigationReport?.approvedBy ||
       '',
   });
+  const [emailAddress, setEmailAddress] = useState(
+    navigationReport?.requestedBy || ''
+  );
+  const [sendStatus, setSendStatus] = useState('idle');
+  const [sendError, setSendError] = useState('');
+  const [sendInfoMessage, setSendInfoMessage] = useState('');
 
   const resolved = {
     name: currentUserName || 'Ukendt bruger',
@@ -54,20 +73,25 @@ export default function Udskriv() {
   };
 
   useEffect(() => {
-    if (currentUserName) {
-      return;
-    }
+    let isMounted = true;
 
     const fetchUser = async () => {
       try {
         const { data: { user } } = await Supabase.auth.getUser();
-        setCurrentUserName(user?.user_metadata?.full_name || user?.email || 'Ukendt bruger');
+        if (!isMounted) return;
+        const derivedName = user?.user_metadata?.full_name || user?.email || 'Ukendt bruger';
+        setCurrentUserName((prev) => prev || derivedName);
+        setEmailAddress((prev) => prev || user?.email || '');
       } catch (error) {
         console.error('Fejl ved hentning af bruger:', error);
       }
     };
 
     fetchUser();
+
+    return () => {
+      isMounted = false;
+    };
   }, [currentUserName]);
 
   useEffect(() => {
@@ -106,6 +130,7 @@ export default function Udskriv() {
         godkendtAf: derivedPayload.godkendtAf,
       });
       setCurrentUserName((prev) => prev || derivedPayload.name);
+      setEmailAddress((prev) => prev || navigationReport.requestedBy || '');
       setLoading(false);
       setLoadError(null);
       return;
@@ -122,6 +147,9 @@ export default function Udskriv() {
       if (parsed.report) {
         setReportData(parsed.report);
         setCompletedPolicies(parsed.report.policies || []);
+        if (parsed.report.requestedBy) {
+          setEmailAddress((prev) => prev || parsed.report.requestedBy);
+        }
       }
       setApprovalMeta((prev) => ({
         standard: parsed.standard || prev.standard,
@@ -266,6 +294,99 @@ export default function Udskriv() {
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
   };
 
+  const handleSendPdfEmail = async () => {
+    if (!emailAddress || !emailAddress.trim()) {
+      setSendError('Indtast en e-mailadresse.');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailAddress.trim())) {
+      setSendError('Angiv en gyldig e-mailadresse.');
+      return;
+    }
+
+    const receiptElement = document.querySelector('.receipt-box');
+    if (!receiptElement) {
+      setSendError('Kunne ikke finde kvitteringen på siden.');
+      return;
+    }
+
+    try {
+      setSendError('');
+  setSendStatus('sending');
+  setSendInfoMessage('Sender PDF ...');
+
+      const canvas = await html2canvas(receiptElement, {
+        scale: 2,
+        useCORS: true,
+        windowWidth: receiptElement.scrollWidth,
+        windowHeight: receiptElement.scrollHeight,
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'pt', 'a4');
+      const margin = 20;
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const scale = Math.min(
+        (pageWidth - margin * 2) / canvas.width,
+        (pageHeight - margin * 2) / canvas.height
+      );
+      const pdfWidth = canvas.width * scale;
+      const pdfHeight = canvas.height * scale;
+
+      pdf.addImage(imgData, 'PNG', margin, margin, pdfWidth, pdfHeight, '', 'FAST');
+
+      const pdfBlob = pdf.output('blob');
+      const pdfDataUrl = await blobToBase64(pdfBlob);
+      const base64Payload = pdfDataUrl.replace(/^data:application\/pdf;base64,/, '');
+      const filename = `compliance-receipt-${Date.now()}.pdf`;
+
+      const response = await fetch(EMAIL_SEND_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: emailAddress.trim(),
+          subject: 'Compliance rapport PDF',
+          filename,
+          pdfBase64: base64Payload,
+          metadata: {
+            reportTitle: reportData?.title || 'Compliance Report',
+            userName: resolved.name,
+            standard: resolved.standard,
+          },
+        }),
+      });
+
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(payload?.error || 'Kunne ikke sende PDF-email.');
+      }
+
+      const isMockDelivery = Boolean(payload?.mockDelivery);
+      const nextStatus = isMockDelivery ? 'mock' : 'sent';
+      setSendStatus(nextStatus);
+      setSendInfoMessage(
+        isMockDelivery
+          ? 'Serveren kører i mock-mode: tjek terminalen for mailindhold.'
+          : 'Look at mail inbox!'
+      );
+      setTimeout(() => {
+        setSendStatus('idle');
+        setSendInfoMessage('');
+      }, 6000);
+    } catch (error) {
+      console.error('Fejl ved afsendelse af PDF:', error);
+      setSendError(error?.message || 'Kunne ikke sende PDF. Prøv igen.');
+      setSendStatus('error');
+      setSendInfoMessage('');
+    }
+  };
+
   return (
     <div className="receipt-page">
       <div className="receipt-box">
@@ -315,6 +436,47 @@ export default function Udskriv() {
         <div className="btn-row no-print">
           <button className="print-btn" onClick={handlePrint}>Udskriv</button>
           <button className="export-btn" onClick={handleMail}>Export PDF to Mail</button>
+        </div>
+
+        <div className="email-send no-print">
+          <p className="email-send-label">Input E-mail to receive PDF of report via mail</p>
+          <div className="email-send-row">
+            <input
+              type="email"
+              className="email-input"
+              value={emailAddress}
+              onChange={(event) => {
+                setEmailAddress(event.target.value);
+                if (sendStatus !== 'idle') {
+                  setSendStatus('idle');
+                }
+                if (sendError) {
+                  setSendError('');
+                }
+                if (sendInfoMessage) {
+                  setSendInfoMessage('');
+                }
+              }}
+              placeholder="email@example.com"
+            />
+            <button
+              className={`send-btn ${sendStatus === 'sent' ? 'success' : ''}`}
+              onClick={handleSendPdfEmail}
+              disabled={sendStatus === 'sending'}
+            >
+              {sendStatus === 'sending' ? 'Sending…' : 'Send'}
+            </button>
+            {sendInfoMessage && (
+              <span
+                className={`inbox-message ${
+                  sendStatus === 'mock' ? 'mock' : sendStatus === 'sending' ? 'sending' : ''
+                }`}
+              >
+                {sendInfoMessage}
+              </span>
+            )}
+          </div>
+          {sendError && <p className="email-error">{sendError}</p>}
         </div>
 
         <div className="policies-section">
@@ -477,6 +639,88 @@ export default function Udskriv() {
           display: flex;
           gap: 12px;
           justify-content: center;
+        }
+
+        .email-send {
+          margin-top: 24px;
+          padding: 20px;
+          background-color: #f8fafc;
+          border: 1px solid #e2e8f0;
+          border-radius: 12px;
+          text-align: left;
+        }
+
+        .email-send-label {
+          margin-bottom: 12px;
+          font-weight: 600;
+          color: #0f172a;
+        }
+
+        .email-send-row {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 12px;
+          align-items: center;
+        }
+
+        .email-input {
+          flex: 1;
+          min-width: 220px;
+          padding: 12px 14px;
+          border-radius: 10px;
+          border: 1px solid #cbd5e1;
+          font-size: 16px;
+        }
+
+        .email-input:focus {
+          outline: none;
+          border-color: #2563EB;
+          box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        }
+
+        .send-btn {
+          background-color: #2563EB;
+          color: white;
+          border: none;
+          padding: 12px 24px;
+          border-radius: 10px;
+          font-size: 16px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: background 0.2s ease;
+        }
+
+        .send-btn:hover:not(:disabled) {
+          background-color: #1d4ed8;
+        }
+
+        .send-btn:disabled {
+          opacity: 0.65;
+          cursor: not-allowed;
+        }
+
+        .send-btn.success {
+          background-color: #16a34a;
+        }
+
+        .inbox-message {
+          font-size: 14px;
+          font-weight: 600;
+          color: #15803d;
+        }
+
+        .inbox-message.sending {
+          color: #0f172a;
+        }
+
+        .inbox-message.mock {
+          color: #b45309;
+        }
+
+        .email-error {
+          margin-top: 8px;
+          color: #b91c1c;
+          font-size: 14px;
         }
 
         .policies-section {
