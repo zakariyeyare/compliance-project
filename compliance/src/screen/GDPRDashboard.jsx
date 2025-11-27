@@ -147,6 +147,10 @@ const GDPRDashboard = ({ orgId = 1 }) => {
     navigate('/dashboard');
   };
 
+  const goToComplianceOverview = () => {
+    navigate('/compliance-overview');
+  };
+
   // Calculate number of saved policies
   const getSavedPoliciesCount = () => {
     return Object.values(savedPolicies).filter(policy => policy && typeof policy === 'string' && policy.trim() !== '').length;
@@ -225,9 +229,18 @@ const GDPRDashboard = ({ orgId = 1 }) => {
             </p>
           </Col>
           <Col md={4} className="text-end">
-            <Badge bg="info" className="fs-6 px-3 py-2">
-              GDPR Compliance Dashboard
-            </Badge>
+            <div className="d-flex justify-content-end align-items-center gap-2 flex-wrap">
+              <Badge bg="info" className="fs-6 px-3 py-2">
+                GDPR Compliance Dashboard
+              </Badge>
+              <Button 
+                variant="primary"
+                onClick={goToComplianceOverview}
+              >
+                <i className="fas fa-arrow-right me-2"></i>
+                Continue to Overview
+              </Button>
+            </div>
           </Col>
         </Row>
       </div>
@@ -445,6 +458,13 @@ const GDPRDashboard = ({ orgId = 1 }) => {
               You have completed <strong>{getSavedPoliciesCount()}</strong> out of <strong>{getTotalSubcontrolsCount()}</strong> policies.
               View your compliance overview and export your policies.
             </p>
+            <Button 
+              variant="success"
+              onClick={goToComplianceOverview}
+            >
+              <i className="fas fa-arrow-right me-2"></i>
+              Continue to Overview
+            </Button>
           </Card.Body>
         </Card>
       </div>
