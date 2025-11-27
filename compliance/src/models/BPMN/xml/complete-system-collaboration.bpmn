@@ -1,0 +1,361 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" 
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" 
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" 
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI" 
+                  id="defs_complete_system" 
+                  targetNamespace="http://example.com/bpmn">
+  
+  <bpmn:collaboration id="collaboration_compliance_system">
+    <bpmn:participant id="participant_user" name="User / Compliance Officer" processRef="process_user_activities" />
+    <bpmn:participant id="participant_webapp" name="Compliance WebApp (System)" processRef="process_webapp_activities" />
+    <bpmn:participant id="participant_auth" name="Auth Backend (Supabase)" processRef="process_auth_activities" />
+    <bpmn:participant id="participant_approver" name="Approver" processRef="process_approver_activities" />
+    
+    <!-- Message Flows -->
+    <bpmn:messageFlow id="msg_flow_1" name="Submit Login" sourceRef="task_user_submit_login" targetRef="task_webapp_establish_session" />
+    <bpmn:messageFlow id="msg_flow_2" name="Validate" sourceRef="task_webapp_establish_session" targetRef="task_auth_validate" />
+    <bpmn:messageFlow id="msg_flow_3" name="Auth Result" sourceRef="task_auth_validate" targetRef="task_webapp_establish_session" />
+    <bpmn:messageFlow id="msg_flow_4" name="Session OK" sourceRef="task_webapp_establish_session" targetRef="gw_user_authorized" />
+    <bpmn:messageFlow id="msg_flow_5" name="Save Draft" sourceRef="task_user_author_content" targetRef="task_webapp_save_draft" />
+    <bpmn:messageFlow id="msg_flow_6" name="Submit Report" sourceRef="task_user_submit_approval" targetRef="task_approver_review" />
+    <bpmn:messageFlow id="msg_flow_7" name="Approval Decision" sourceRef="gw_approver_decision" targetRef="gw_approval_outcome" />
+    <bpmn:messageFlow id="msg_flow_8" name="Publish" sourceRef="task_user_view_published" targetRef="task_webapp_publish_report" />
+    <bpmn:messageFlow id="msg_flow_9" name="Save Policy" sourceRef="task_user_edit_policy" targetRef="task_webapp_save_policy" />
+    <bpmn:messageFlow id="msg_flow_10" name="Export Request" sourceRef="task_user_request_export" targetRef="task_webapp_generate_html" />
+    <bpmn:messageFlow id="msg_flow_11" name="HTML Document" sourceRef="task_webapp_generate_html" targetRef="task_user_view_print" />
+  </bpmn:collaboration>
+  
+  <!-- User / Compliance Officer Process -->
+  <bpmn:process id="process_user_activities" name="User Activities" isExecutable="false">
+    <bpmn:startEvent id="start_user_entry" name="User Opens App" />
+    <bpmn:task id="task_user_enter_credentials" name="Enter Credentials" />
+    <bpmn:task id="task_user_submit_login" name="Submit Login" />
+    <bpmn:exclusiveGateway id="gw_user_authorized" name="Authorized?" />
+    <bpmn:task id="task_user_access_dashboard" name="Access Dashboard" />
+    <bpmn:task id="task_user_create_report" name="Create New Report" />
+    <bpmn:task id="task_user_author_content" name="Author Report Content" />
+    <bpmn:task id="task_user_submit_approval" name="Submit for Approval" />
+    <bpmn:exclusiveGateway id="gw_approval_outcome" name="Approval Status" />
+    <bpmn:task id="task_user_view_published" name="View Published Report" />
+    <bpmn:intermediateCatchEvent id="event_order_released" name="Order released" />
+    <bpmn:intermediateCatchEvent id="event_order_delivery_released" name="Order and delivery released" />
+    <bpmn:exclusiveGateway id="gw_repair_center_credit" name="Repair Center Credit released" />
+    <bpmn:task id="task_make_credit_billing" name="Make credit and billing transaction" />
+    <bpmn:intermediateCatchEvent id="event_credit_released" name="Credit released" />
+    <bpmn:task id="task_user_request_export" name="Request Report Export" />
+    <bpmn:task id="task_user_view_print" name="View/Print Document" />
+    <bpmn:task id="task_user_view_controls" name="View Controls" />
+    <bpmn:task id="task_user_edit_policy" name="Edit Working Policy" />
+    <bpmn:endEvent id="end_user_session" name="User Session End" />
+    
+    <!-- Sequence Flows -->
+    <bpmn:sequenceFlow id="flow_1" sourceRef="start_user_entry" targetRef="task_user_enter_credentials" />
+    <bpmn:sequenceFlow id="flow_2" sourceRef="task_user_enter_credentials" targetRef="task_user_submit_login" />
+    <bpmn:sequenceFlow id="flow_3" sourceRef="gw_user_authorized" targetRef="task_user_access_dashboard" />
+    <bpmn:sequenceFlow id="flow_4" sourceRef="task_user_access_dashboard" targetRef="task_user_create_report" />
+    <bpmn:sequenceFlow id="flow_5" sourceRef="task_user_create_report" targetRef="task_user_author_content" />
+    <bpmn:sequenceFlow id="flow_6" sourceRef="task_user_author_content" targetRef="task_user_submit_approval" />
+    <bpmn:sequenceFlow id="flow_7" sourceRef="gw_approval_outcome" targetRef="task_user_view_published">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">Approved</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_8" sourceRef="gw_approval_outcome" targetRef="task_user_author_content">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">Rejected</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_9" sourceRef="task_user_access_dashboard" targetRef="task_user_view_controls" />
+    <bpmn:sequenceFlow id="flow_10" sourceRef="task_user_view_controls" targetRef="task_user_edit_policy" />
+    <bpmn:sequenceFlow id="flow_11" sourceRef="task_user_view_published" targetRef="event_order_released" />
+    <bpmn:sequenceFlow id="flow_12" sourceRef="event_order_released" targetRef="gw_repair_center_credit" />
+    <bpmn:sequenceFlow id="flow_13" sourceRef="gw_approval_outcome" targetRef="event_order_delivery_released">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">Order and delivery</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_14" sourceRef="event_order_delivery_released" targetRef="gw_repair_center_credit" />
+    <bpmn:sequenceFlow id="flow_15" sourceRef="gw_repair_center_credit" targetRef="task_make_credit_billing" />
+    <bpmn:sequenceFlow id="flow_16" sourceRef="task_make_credit_billing" targetRef="event_credit_released" />
+    <bpmn:sequenceFlow id="flow_17" sourceRef="event_credit_released" targetRef="task_user_request_export" />
+    <bpmn:sequenceFlow id="flow_18" sourceRef="task_user_request_export" targetRef="task_user_view_print" />
+    <bpmn:sequenceFlow id="flow_19" sourceRef="task_user_view_print" targetRef="end_user_session" />
+  </bpmn:process>
+  
+  <!-- Compliance WebApp Process -->
+  <bpmn:process id="process_webapp_activities" name="WebApp System Activities" isExecutable="false">
+    <bpmn:task id="task_webapp_establish_session" name="Establish Session" />
+    <bpmn:task id="task_webapp_save_draft" name="Save Draft to LocalStorage" />
+    <bpmn:task id="task_webapp_save_policy" name="Save Policy to LocalStorage" />
+    <bpmn:task id="task_webapp_publish_report" name="Publish Report" />
+    <bpmn:task id="task_webapp_generate_html" name="Generate HTML Export" />
+  </bpmn:process>
+  
+  <!-- Auth Backend Process -->
+  <bpmn:process id="process_auth_activities" name="Auth Backend Activities" isExecutable="false">
+    <bpmn:task id="task_auth_validate" name="Validate Credentials" />
+    <bpmn:task id="task_auth_create_account" name="Create Account" />
+    <bpmn:exclusiveGateway id="gw_auth_verified" name="Email Verified?" />
+  </bpmn:process>
+  
+  <!-- Approver Process -->
+  <bpmn:process id="process_approver_activities" name="Approver Activities" isExecutable="false">
+    <bpmn:task id="task_approver_review" name="Review Report" />
+    <bpmn:exclusiveGateway id="gw_approver_decision" name="Approve?" />
+    <bpmn:sequenceFlow id="flow_approver_1" sourceRef="task_approver_review" targetRef="gw_approver_decision" />
+  </bpmn:process>
+  
+  <!-- BPMN Diagram -->
+  <bpmndi:BPMNDiagram id="diagram_complete_system">
+    <bpmndi:BPMNPlane id="plane_complete_system" bpmnElement="collaboration_compliance_system">
+      
+      <!-- Participants (Pools) -->
+      <bpmndi:BPMNShape id="shape_participant_user" bpmnElement="participant_user" isHorizontal="true">
+        <dc:Bounds x="60" y="80" width="2400" height="400" />
+      </bpmndi:BPMNShape>
+      
+      <bpmndi:BPMNShape id="shape_participant_webapp" bpmnElement="participant_webapp" isHorizontal="true">
+        <dc:Bounds x="60" y="520" width="2400" height="280" />
+      </bpmndi:BPMNShape>
+      
+      <bpmndi:BPMNShape id="shape_participant_auth" bpmnElement="participant_auth" isHorizontal="true">
+        <dc:Bounds x="60" y="840" width="2400" height="220" />
+      </bpmndi:BPMNShape>
+      
+      <bpmndi:BPMNShape id="shape_participant_approver" bpmnElement="participant_approver" isHorizontal="true">
+        <dc:Bounds x="60" y="1100" width="2400" height="200" />
+      </bpmndi:BPMNShape>
+      
+      <!-- User Lane Elements -->
+      <bpmndi:BPMNShape id="shape_start_user_entry" bpmnElement="start_user_entry">
+        <dc:Bounds x="130" y="180" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_task_user_enter_credentials" bpmnElement="task_user_enter_credentials">
+        <dc:Bounds x="220" y="165" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_task_user_submit_login" bpmnElement="task_user_submit_login">
+        <dc:Bounds x="420" y="165" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_gw_user_authorized" bpmnElement="gw_user_authorized" isMarkerVisible="true">
+        <dc:Bounds x="610" y="180" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_task_user_access_dashboard" bpmnElement="task_user_access_dashboard">
+        <dc:Bounds x="720" y="165" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_task_user_create_report" bpmnElement="task_user_create_report">
+        <dc:Bounds x="930" y="165" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_task_user_author_content" bpmnElement="task_user_author_content">
+        <dc:Bounds x="1140" y="165" width="170" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_task_user_submit_approval" bpmnElement="task_user_submit_approval">
+        <dc:Bounds x="1370" y="165" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_gw_approval_outcome" bpmnElement="gw_approval_outcome" isMarkerVisible="true">
+        <dc:Bounds x="1580" y="180" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_task_user_view_published" bpmnElement="task_user_view_published">
+        <dc:Bounds x="1690" y="165" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_event_order_released" bpmnElement="event_order_released">
+        <dc:Bounds x="1890" y="187" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_event_order_delivery_released" bpmnElement="event_order_delivery_released">
+        <dc:Bounds x="1587" y="330" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_gw_repair_center_credit" bpmnElement="gw_repair_center_credit" isMarkerVisible="true">
+        <dc:Bounds x="1975" y="270" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_task_make_credit_billing" bpmnElement="task_make_credit_billing">
+        <dc:Bounds x="2080" y="260" width="180" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_event_credit_released" bpmnElement="event_credit_released">
+        <dc:Bounds x="2310" y="282" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_task_user_request_export" bpmnElement="task_user_request_export">
+        <dc:Bounds x="2080" y="140" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_task_user_view_print" bpmnElement="task_user_view_print">
+        <dc:Bounds x="2080" y="360" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_task_user_view_controls" bpmnElement="task_user_view_controls">
+        <dc:Bounds x="930" y="310" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_task_user_edit_policy" bpmnElement="task_user_edit_policy">
+        <dc:Bounds x="1140" y="310" width="170" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_end_user_session" bpmnElement="end_user_session">
+        <dc:Bounds x="2350" y="382" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      
+      <!-- WebApp Lane Elements -->
+      <bpmndi:BPMNShape id="shape_task_webapp_establish_session" bpmnElement="task_webapp_establish_session">
+        <dc:Bounds x="720" y="580" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_task_webapp_save_draft" bpmnElement="task_webapp_save_draft">
+        <dc:Bounds x="1140" y="580" width="170" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_task_webapp_save_policy" bpmnElement="task_webapp_save_policy">
+        <dc:Bounds x="1140" y="690" width="170" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_task_webapp_publish_report" bpmnElement="task_webapp_publish_report">
+        <dc:Bounds x="1690" y="580" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_task_webapp_generate_html" bpmnElement="task_webapp_generate_html">
+        <dc:Bounds x="2080" y="580" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      
+      <!-- Auth Backend Lane Elements -->
+      <bpmndi:BPMNShape id="shape_task_auth_validate" bpmnElement="task_auth_validate">
+        <dc:Bounds x="420" y="900" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_task_auth_create_account" bpmnElement="task_auth_create_account">
+        <dc:Bounds x="220" y="900" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_gw_auth_verified" bpmnElement="gw_auth_verified" isMarkerVisible="true">
+        <dc:Bounds x="265" y="1000" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      
+      <!-- Approver Lane Elements -->
+      <bpmndi:BPMNShape id="shape_task_approver_review" bpmnElement="task_approver_review">
+        <dc:Bounds x="1370" y="1160" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_gw_approver_decision" bpmnElement="gw_approver_decision" isMarkerVisible="true">
+        <dc:Bounds x="1580" y="1175" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      
+      <!-- User Sequence Flow Edges -->
+      <bpmndi:BPMNEdge id="edge_flow_1" bpmnElement="flow_1">
+        <di:waypoint x="166" y="198" />
+        <di:waypoint x="220" y="205" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_2" bpmnElement="flow_2">
+        <di:waypoint x="360" y="205" />
+        <di:waypoint x="420" y="205" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_3" bpmnElement="flow_3">
+        <di:waypoint x="660" y="205" />
+        <di:waypoint x="720" y="205" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_4" bpmnElement="flow_4">
+        <di:waypoint x="870" y="205" />
+        <di:waypoint x="930" y="205" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_5" bpmnElement="flow_5">
+        <di:waypoint x="1080" y="205" />
+        <di:waypoint x="1140" y="205" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_6" bpmnElement="flow_6">
+        <di:waypoint x="1310" y="205" />
+        <di:waypoint x="1370" y="205" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_7" bpmnElement="flow_7">
+        <di:waypoint x="1630" y="205" />
+        <di:waypoint x="1690" y="205" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_8" bpmnElement="flow_8">
+        <di:waypoint x="1605" y="230" />
+        <di:waypoint x="1605" y="420" />
+        <di:waypoint x="1225" y="420" />
+        <di:waypoint x="1225" y="245" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_9" bpmnElement="flow_9">
+        <di:waypoint x="795" y="245" />
+        <di:waypoint x="795" y="350" />
+        <di:waypoint x="930" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_10" bpmnElement="flow_10">
+        <di:waypoint x="1080" y="350" />
+        <di:waypoint x="1140" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_11" bpmnElement="flow_11">
+        <di:waypoint x="1840" y="205" />
+        <di:waypoint x="1890" y="205" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_12" bpmnElement="flow_12">
+        <di:waypoint x="1926" y="205" />
+        <di:waypoint x="2000" y="205" />
+        <di:waypoint x="2000" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_13" bpmnElement="flow_13">
+        <di:waypoint x="1605" y="230" />
+        <di:waypoint x="1605" y="330" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_14" bpmnElement="flow_14">
+        <di:waypoint x="1623" y="348" />
+        <di:waypoint x="2000" y="295" />
+        <di:waypoint x="1975" y="295" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_15" bpmnElement="flow_15">
+        <di:waypoint x="2025" y="295" />
+        <di:waypoint x="2080" y="300" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_16" bpmnElement="flow_16">
+        <di:waypoint x="2260" y="300" />
+        <di:waypoint x="2310" y="300" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_17" bpmnElement="flow_17">
+        <di:waypoint x="2328" y="282" />
+        <di:waypoint x="2155" y="220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_18" bpmnElement="flow_18">
+        <di:waypoint x="2155" y="220" />
+        <di:waypoint x="2155" y="360" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_19" bpmnElement="flow_19">
+        <di:waypoint x="2230" y="400" />
+        <di:waypoint x="2350" y="400" />
+      </bpmndi:BPMNEdge>
+      
+      <!-- Approver Sequence Flow Edges -->
+      <bpmndi:BPMNEdge id="edge_flow_approver_1" bpmnElement="flow_approver_1">
+        <di:waypoint x="1520" y="1200" />
+        <di:waypoint x="1580" y="1200" />
+      </bpmndi:BPMNEdge>
+      
+      <!-- Message Flow Edges -->
+      <bpmndi:BPMNEdge id="edge_msg_flow_1" bpmnElement="msg_flow_1">
+        <di:waypoint x="485" y="245" />
+        <di:waypoint x="795" y="580" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_msg_flow_2" bpmnElement="msg_flow_2">
+        <di:waypoint x="795" y="660" />
+        <di:waypoint x="485" y="900" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_msg_flow_3" bpmnElement="msg_flow_3">
+        <di:waypoint x="485" y="900" />
+        <di:waypoint x="795" y="660" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_msg_flow_4" bpmnElement="msg_flow_4">
+        <di:waypoint x="795" y="580" />
+        <di:waypoint x="635" y="230" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_msg_flow_5" bpmnElement="msg_flow_5">
+        <di:waypoint x="1225" y="245" />
+        <di:waypoint x="1225" y="580" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_msg_flow_6" bpmnElement="msg_flow_6">
+        <di:waypoint x="1445" y="245" />
+        <di:waypoint x="1445" y="1160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_msg_flow_7" bpmnElement="msg_flow_7">
+        <di:waypoint x="1605" y="1175" />
+        <di:waypoint x="1605" y="230" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_msg_flow_8" bpmnElement="msg_flow_8">
+        <di:waypoint x="1765" y="245" />
+        <di:waypoint x="1765" y="580" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_msg_flow_9" bpmnElement="msg_flow_9">
+        <di:waypoint x="1225" y="390" />
+        <di:waypoint x="1225" y="690" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_msg_flow_10" bpmnElement="msg_flow_10">
+        <di:waypoint x="2155" y="220" />
+        <di:waypoint x="2155" y="580" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_msg_flow_11" bpmnElement="msg_flow_11">
+        <di:waypoint x="2155" y="660" />
+        <di:waypoint x="2155" y="360" />
+      </bpmndi:BPMNEdge>
+      
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  
+</bpmn:definitions>

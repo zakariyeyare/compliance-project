@@ -1,0 +1,222 @@
+{
+  "processes": [
+    {
+      "process": {"name": "User Authentication", "goal": "Authenticate users to access compliance features"},
+      "participants": [{"pool": "Compliance WebApp", "lanes": ["User", "System", "Auth Backend (Supabase)"]}],
+      "events": {
+        "start": [{"type": "none", "name": "Open Login Page"}],
+        "intermediate": [],
+        "end": [{"type": "none", "name": "Login Successful"}, {"type": "none", "name": "Login Failed"}]
+      },
+      "activities": {
+        "tasks": [
+          {"name": "Enter Credentials", "lane": "User", "inputs": ["Email", "Password"], "outputs": ["Credentials"]},
+          {"name": "Submit Login", "lane": "User", "inputs": ["Credentials"], "outputs": ["Login Request"]},
+          {"name": "Validate Credentials", "lane": "Auth Backend (Supabase)", "inputs": ["Login Request"], "outputs": ["Auth Result"]},
+          {"name": "Establish Session", "lane": "System", "inputs": ["Auth Result"], "outputs": ["Session Token"]}
+        ],
+        "subprocesses": []
+      },
+      "gateways": {
+        "exclusive": [
+          {"name": "Authorized?", "branches": [
+            {"condition": "Yes", "to": "Login Successful"},
+            {"condition": "No", "to": "Login Failed"}
+          ]}
+        ],
+        "parallel": [],
+        "inclusive": []
+      },
+      "flows": {
+        "sequence": [
+          "Open Login Page → Enter Credentials",
+          "Enter Credentials → Submit Login",
+          "Submit Login → Validate Credentials",
+          "Validate Credentials → Authorized?",
+          "Authorized? (Yes) → Establish Session",
+          "Establish Session → Login Successful",
+          "Authorized? (No) → Login Failed"
+        ],
+        "message": []
+      },
+      "data": {
+        "objects": ["Email", "Password", "Credentials", "Auth Result", "Session Token"],
+        "stores": ["Auth Store (Supabase)"]
+      },
+      "artifacts": [],
+      "constraints": ["Lockout after N failed attempts", "Passwords must meet policy"]
+    },
+    {
+      "process": {"name": "User Registration", "goal": "Create user accounts for access control"},
+      "participants": [{"pool": "Compliance WebApp", "lanes": ["Prospective User", "System", "Auth Backend (Supabase)"]}],
+      "events": {
+        "start": [{"type": "none", "name": "Open Register Page"}],
+        "intermediate": [],
+        "end": [{"type": "none", "name": "Account Created"}]
+      },
+      "activities": {
+        "tasks": [
+          {"name": "Enter Registration Info", "lane": "Prospective User", "inputs": ["Email", "Password"], "outputs": ["Registration Data"]},
+          {"name": "Submit Registration", "lane": "Prospective User", "inputs": ["Registration Data"], "outputs": ["Registration Request"]},
+          {"name": "Create Account", "lane": "Auth Backend (Supabase)", "inputs": ["Registration Request"], "outputs": ["Account"]},
+          {"name": "Confirm Email", "lane": "Prospective User", "inputs": ["Confirmation Link"], "outputs": ["Confirmed Account"]}
+        ],
+        "subprocesses": []
+      },
+      "gateways": {
+        "exclusive": [
+          {"name": "Email Verified?", "branches": [
+            {"condition": "Yes", "to": "Account Created"},
+            {"condition": "No", "to": "Confirm Email"}
+          ]}
+        ],
+        "parallel": [],
+        "inclusive": []
+      },
+      "flows": {
+        "sequence": [
+          "Open Register Page → Enter Registration Info",
+          "Enter Registration Info → Submit Registration",
+          "Submit Registration → Create Account",
+          "Create Account → Confirm Email",
+          "Confirm Email → Email Verified?",
+          "Email Verified? (Yes) → Account Created",
+          "Email Verified? (No) → Confirm Email"
+        ],
+        "message": []
+      },
+      "data": {
+        "objects": ["Registration Data", "Account", "Confirmation Link"],
+        "stores": ["Auth Store (Supabase)"]
+      },
+      "artifacts": [],
+      "constraints": []
+    },
+    {
+      "process": {"name": "GDPR Report Lifecycle", "goal": "Draft, approve, and publish GDPR reports"},
+      "participants": [{"pool": "Compliance Operations", "lanes": ["Compliance Officer", "Approver", "System"]}],
+      "events": {
+        "start": [{"type": "none", "name": "Create New Report"}],
+        "intermediate": [],
+        "end": [
+          {"type": "none", "name": "Report Published"},
+          {"type": "none", "name": "Report Deleted"}
+        ]
+      },
+      "activities": {
+        "tasks": [
+          {"name": "Author Report Content", "lane": "Compliance Officer", "inputs": ["Policy Templates", "Data"], "outputs": ["Draft Report"]},
+          {"name": "Save Draft", "lane": "System", "inputs": ["Draft Report"], "outputs": ["Stored Draft"]},
+          {"name": "Submit for Approval", "lane": "Compliance Officer", "inputs": ["Stored Draft"], "outputs": ["Approval Request"]},
+          {"name": "Review Report", "lane": "Approver", "inputs": ["Approval Request"], "outputs": ["Approval Decision"]},
+          {"name": "Publish Report", "lane": "System", "inputs": ["Approved Report"], "outputs": ["Published Report"]},
+          {"name": "Delete Report", "lane": "System", "inputs": ["Draft Report"], "outputs": ["Removed Draft"]}
+        ],
+        "subprocesses": []
+      },
+      "gateways": {
+        "exclusive": [
+          {"name": "Approval Outcome", "branches": [
+            {"condition": "Approved", "to": "Publish Report"},
+            {"condition": "Rejected", "to": "Author Report Content"}
+          ]},
+          {"name": "Allow Delete?", "branches": [
+            {"condition": "Status = Draft", "to": "Delete Report"},
+            {"condition": "Status in [Approved, Published]", "to": "Prevent Delete"}
+          ]}
+        ],
+        "parallel": [],
+        "inclusive": []
+      },
+      "flows": {
+        "sequence": [
+          "Create New Report → Author Report Content",
+          "Author Report Content → Save Draft",
+          "Save Draft → Submit for Approval",
+          "Submit for Approval → Review Report",
+          "Review Report → Approval Outcome",
+          "Approval Outcome (Approved) → Publish Report",
+          "Approval Outcome (Rejected) → Author Report Content",
+          "Allow Delete? (Status = Draft) → Delete Report",
+          "Allow Delete? (Status in [Approved, Published]) → Prevent Delete"
+        ],
+        "message": []
+      },
+      "data": {
+        "objects": ["Draft Report", "Stored Draft", "Approval Request", "Approved Report", "Published Report"],
+        "stores": ["LocalStorage: gdpr_reports"]
+      },
+      "artifacts": [{"note": "Status labels translated to English"}],
+      "constraints": [
+        "Deletion blocked when status in [Approved, Published]",
+        "Status workflow: Draft → Approved → Published",
+        "Versioning on creation"
+      ]
+    },
+    {
+      "process": {"name": "Compliance Overview Management", "goal": "Track and update compliance controls and policies"},
+      "participants": [{"pool": "Compliance WebApp", "lanes": ["Compliance Officer", "System"]}],
+      "events": {
+        "start": [{"type": "none", "name": "Open Compliance Overview"}],
+        "intermediate": [],
+        "end": [{"type": "none", "name": "Overview Updated"}]
+      },
+      "activities": {
+        "tasks": [
+          {"name": "View Controls", "lane": "Compliance Officer", "outputs": ["Controls List"]},
+          {"name": "Toggle Control Details", "lane": "Compliance Officer", "outputs": ["Expanded Control"]},
+          {"name": "Edit Working Policy", "lane": "Compliance Officer", "inputs": ["Control"], "outputs": ["Updated Working Policy"]},
+          {"name": "Save Policy", "lane": "System", "inputs": ["Updated Working Policy"], "outputs": ["Saved Policy"]}
+        ],
+        "subprocesses": []
+      },
+      "gateways": {"exclusive": [], "parallel": [], "inclusive": []},
+      "flows": {
+        "sequence": [
+          "Open Compliance Overview → View Controls",
+          "View Controls → Toggle Control Details",
+          "Toggle Control Details → Edit Working Policy",
+          "Edit Working Policy → Save Policy",
+          "Save Policy → Overview Updated"
+        ],
+        "message": []
+      },
+      "data": {"objects": ["Controls List", "Working Policy", "Saved Policy"], "stores": ["LocalStorage: gdpr_saved_policies"]},
+      "artifacts": [],
+      "constraints": []
+    },
+    {
+      "process": {"name": "Report Export and Print", "goal": "Generate view-only and print-ready reports"},
+      "participants": [{"pool": "Compliance WebApp", "lanes": ["Compliance Officer", "System", "Browser"]}],
+      "events": {
+        "start": [{"type": "none", "name": "Open Report Page"}],
+        "intermediate": [],
+        "end": [{"type": "none", "name": "HTML Generated"}, {"type": "none", "name": "Report Printed"}]
+      },
+      "activities": {
+        "tasks": [
+          {"name": "Select Report", "lane": "Compliance Officer", "outputs": ["Selected Report"]},
+          {"name": "Generate View HTML", "lane": "System", "inputs": ["Selected Report"], "outputs": ["View Document"]},
+          {"name": "Generate Print HTML", "lane": "System", "inputs": ["Selected Report"], "outputs": ["Print Document"]},
+          {"name": "Print Document", "lane": "Browser", "inputs": ["Print Document"], "outputs": ["Printed Report"]}
+        ],
+        "subprocesses": []
+      },
+      "gateways": {"exclusive": [], "parallel": [], "inclusive": []},
+      "flows": {
+        "sequence": [
+          "Open Report Page → Select Report",
+          "Select Report → Generate View HTML",
+          "Select Report → Generate Print HTML",
+          "Generate Print HTML → Print Document",
+          "Generate View HTML → HTML Generated",
+          "Print Document → Report Printed"
+        ],
+        "message": []
+      },
+      "data": {"objects": ["Selected Report", "View Document", "Print Document"], "stores": []},
+      "artifacts": [],
+      "constraints": ["Template literals must be valid", "All UI labels in English"]
+    }
+  ]
+}
