@@ -193,100 +193,27 @@ function ComplianceOverview() {
   };
 
   const exportReport = (report) => {
-    // Create print-friendly HTML document
-    const htmlContent = generateReportHTML(report);
-    
-    // Open in new window for printing
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
+    const requesterName = report.requestedByName || report.requestedBy || currentUser?.user_metadata?.full_name || currentUser?.email || 'Ukendt bruger';
+    const approvalName = report.approvedByName || report.approvedBy || 'Ikke godkendt endnu';
+    const resolvedDate = report.publishedDate || report.approvedDate || report.createdDate;
+
+    const receiptPayload = {
+      name: requesterName,
+      standard: report.standard || 'GDPR',
+      dato: resolvedDate,
+      godkendtAf: approvalName,
+      report,
+    };
+
+    try {
+      localStorage.setItem('gdpr_last_receipt', JSON.stringify(receiptPayload));
+    } catch (error) {
+      console.error('Kunne ikke gemme rapporten til kvittering', error);
+    }
+
+    navigate('/udskriv', { state: receiptPayload });
   };
 
-  // Helper function to generate report HTML
-  const generateReportHTML = (report) => {
-    return `
-<!DOCTYPE html>
-<html lang="da">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${report.title}</title>
-    <style>
-        @media print {
-            @page { margin: 2cm; size: A4; }
-            body { margin: 0; padding: 0; }
-            .page-break { page-break-after: always; }
-            .no-print { display: none; }
-        }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 1200px; margin: 0 auto; padding: 20px; background: #fff; }
-        .header { text-align: center; border-bottom: 3px solid #0066cc; padding-bottom: 20px; margin-bottom: 30px; }
-        .header h1 { color: #0066cc; margin: 0; font-size: 32px; }
-        .header .version { background: #0066cc; color: white; padding: 5px 15px; border-radius: 5px; display: inline-block; margin-top: 10px; font-weight: bold; }
-        .metadata { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px; border-left: 4px solid #0066cc; }
-        .metadata-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 10px; }
-        .metadata-item { padding: 10px; background: white; border-radius: 5px; }
-        .metadata-label { font-weight: bold; color: #666; font-size: 12px; text-transform: uppercase; margin-bottom: 5px; }
-        .metadata-value { color: #333; font-size: 16px; }
-        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
-        .stat-card { text-align: center; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .stat-number { font-size: 36px; font-weight: bold; margin: 10px 0; }
-        .stat-label { font-size: 14px; opacity: 0.9; }
-        .section { margin-bottom: 40px; }
-        .section-title { color: #0066cc; font-size: 24px; border-bottom: 2px solid #0066cc; padding-bottom: 10px; margin-bottom: 20px; }
-        .policy-item { padding: 20px; border-bottom: 1px solid #eee; background: #fff; margin-bottom: 15px; border-radius: 8px; border: 1px solid #ddd; }
-        .policy-item:last-child { border-bottom: 1px solid #ddd; }
-        .policy-content { padding: 15px; line-height: 1.8; color: #333; }
-        .footer { margin-top: 50px; padding-top: 20px; border-top: 2px solid #ddd; text-align: center; color: #666; font-size: 12px; }
-        .status-badge { display: inline-block; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 14px; }
-        .status-godkendt { background: #28a745; color: white; }
-        .status-publiceret { background: #17a2b8; color: white; }
-        .print-button { position: fixed; top: 20px; right: 20px; background: #0066cc; color: white; border: none; padding: 12px 24px; border-radius: 5px; cursor: pointer; font-size: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
-        .print-button:hover { background: #0052a3; }
-    </style>
-</head>
-<body>
-    <button class="print-button no-print" onclick="window.print()">🖨️ Print / Gem som PDF</button>
-    <div class="header">
-        <h1>${report.title}</h1>
-        <div class="version">Version ${report.version}</div>
-        <div style="margin-top: 15px;">
-            <span class="status-badge status-${report.status.toLowerCase().replace(' ', '-')}">${report.status}</span>
-        </div>
-    </div>
-    <div class="metadata">
-        <div class="metadata-row">
-            <div class="metadata-item"><div class="metadata-label">Created Date</div><div class="metadata-value">${new Date(report.createdDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div></div>
-        </div>
-        ${report.approvedBy ? `<div class="metadata-row">
-            <div class="metadata-item"><div class="metadata-label">Approved By</div><div class="metadata-value">${report.approvedByName}</div></div>
-            <div class="metadata-item"><div class="metadata-label">Approved Date</div><div class="metadata-value">${new Date(report.approvedDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div></div>
-        </div>` : ''}
-        ${report.publishedDate ? `<div class="metadata-row">
-            <div class="metadata-item"><div class="metadata-label">Published Date</div><div class="metadata-value">${new Date(report.publishedDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div></div>
-        </div>` : ''}
-    </div>
-    <div class="section">
-        <h2 class="section-title">📋 Compliance Policies</h2>
-        ${generatePoliciesHTML(report.policies)}
-    </div>
-    <div class="footer">
-        <p><strong>${report.title}</strong></p>
-        <p>Generated: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
-        <p>© ${new Date().getFullYear()} Compliance App - All rights reserved</p>
-    </div>
-</body>
-</html>`;
-  };
-
-  const generatePoliciesHTML = (policies) => {
-    let html = '';
-    policies.forEach((policy) => {
-      html += `<div class="policy-item">
-          <div class="policy-content">${policy.policy}</div>
-      </div>`;
-    });
-    return html;
-  };
 
 
   if (loading) {
