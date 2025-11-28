@@ -208,6 +208,7 @@ function ComplianceOverview() {
 
   // Hjælpefunktion til at generere rapport HTML
   const generateReportHTML = (report) => {
+    const companyName = currentUser?.user_metadata?.company_name || 'Virksomhed';
     return `
 <!DOCTYPE html>
 <html lang="da">
@@ -217,66 +218,91 @@ function ComplianceOverview() {
     <title>${report.title}</title>
     <style>
         @media print {
-            @page { margin: 2cm; size: A4; }
+            @page { margin: 2.5cm; size: A4; }
             body { margin: 0; padding: 0; }
             .page-break { page-break-after: always; }
             .no-print { display: none; }
+            .toc { page-break-after: always; }
         }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 1200px; margin: 0 auto; padding: 20px; background: #fff; }
-        .header { text-align: center; border-bottom: 3px solid #0066cc; padding-bottom: 20px; margin-bottom: 30px; }
-        .header h1 { color: #0066cc; margin: 0; font-size: 32px; }
-        .header .version { background: #0066cc; color: white; padding: 5px 15px; border-radius: 5px; display: inline-block; margin-top: 10px; font-weight: bold; }
-        .metadata { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px; border-left: 4px solid #0066cc; }
-        .metadata-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 10px; }
-        .metadata-item { padding: 10px; background: white; border-radius: 5px; }
-        .metadata-label { font-weight: bold; color: #666; font-size: 12px; text-transform: uppercase; margin-bottom: 5px; }
-        .metadata-value { color: #333; font-size: 16px; }
-        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
-        .stat-card { text-align: center; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .stat-number { font-size: 36px; font-weight: bold; margin: 10px 0; }
-        .stat-label { font-size: 14px; opacity: 0.9; }
-        .section { margin-bottom: 40px; }
-        .section-title { color: #0066cc; font-size: 24px; border-bottom: 2px solid #0066cc; padding-bottom: 10px; margin-bottom: 20px; }
-        .policy-item { padding: 20px; border-bottom: 1px solid #eee; background: #fff; margin-bottom: 15px; border-radius: 8px; border: 1px solid #ddd; }
-        .policy-item:last-child { border-bottom: 1px solid #ddd; }
-        .policy-content { padding: 15px; line-height: 1.8; color: #333; }
-        .footer { margin-top: 50px; padding-top: 20px; border-top: 2px solid #ddd; text-align: center; color: #666; font-size: 12px; }
-        .status-badge { display: inline-block; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 14px; }
-        .status-godkendt { background: #28a745; color: white; }
-        .status-publiceret { background: #17a2b8; color: white; }
-        .print-button { position: fixed; top: 20px; right: 20px; background: #0066cc; color: white; border: none; padding: 12px 24px; border-radius: 5px; cursor: pointer; font-size: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+        body { font-family: 'Latin Modern Roman', 'Times New Roman', serif; line-height: 1.6; color: #000; max-width: 21cm; margin: 0 auto; padding: 2.5cm; background: #fff; font-size: 12pt; }
+        .title-page { text-align: center; margin-bottom: 3cm; padding: 2cm 0; }
+        .title-page h1 { font-size: 28pt; margin-bottom: 1cm; color: #000; font-weight: bold; }
+        .title-page .company { font-size: 16pt; margin-bottom: 2cm; }
+        .title-page .date { font-size: 12pt; color: #666; }
+        
+        .doc-info { background: #f5f5f5; padding: 20px; margin: 2cm 0; border-left: 4px solid #0066cc; }
+        .doc-info h2 { font-size: 14pt; margin-top: 0; margin-bottom: 15px; }
+        .doc-info-item { margin-bottom: 8px; }
+        .doc-info-label { font-weight: bold; display: inline-block; width: 180px; }
+        
+        .abstract { margin: 2cm 0; padding: 20px; background: #f9f9f9; border: 1px solid #ddd; font-style: italic; }
+        .abstract h2 { font-size: 14pt; margin-top: 0; }
+        
+        .toc { margin: 2cm 0; }
+        .toc h2 { font-size: 18pt; margin-bottom: 1cm; border-bottom: 2px solid #000; padding-bottom: 10px; }
+        .toc-item { margin: 8px 0; }
+        .toc-number { display: inline-block; width: 40px; font-weight: bold; }
+        
+        .section { margin: 2cm 0 1.5cm 0; }
+        .section-title { font-size: 18pt; color: #0066cc; border-bottom: 2px solid #0066cc; padding-bottom: 8px; margin-bottom: 20px; }
+        .subsection-title { font-size: 14pt; color: #333; margin: 1.5cm 0 1cm 0; font-weight: bold; }
+        
+        .definition-list { margin: 1cm 0; }
+        .definition-term { font-weight: bold; margin-top: 15px; }
+        .definition-desc { margin-left: 1cm; margin-top: 5px; }
+        
+        .policy-item { padding: 20px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 5px; background: #fafafa; }
+        .policy-header { font-weight: bold; color: #0066cc; margin-bottom: 10px; font-size: 11pt; }
+        .policy-content { line-height: 1.8; text-align: justify; }
+        
+        .roles-list { margin: 1cm 0; }
+        .role-item { margin-bottom: 15px; padding: 10px; background: #f9f9f9; border-left: 3px solid #0066cc; }
+        .role-title { font-weight: bold; color: #0066cc; }
+        
+        .procedures { margin: 1cm 0; }
+        .procedure-item { margin-bottom: 20px; padding: 15px; background: #f5f5f5; border-radius: 5px; }
+        .procedure-title { font-weight: bold; margin-bottom: 10px; }
+        
+        .footer { margin-top: 3cm; padding-top: 1cm; border-top: 1px solid #ddd; text-align: center; font-size: 10pt; color: #666; }
+        .print-button { position: fixed; top: 20px; right: 20px; background: #0066cc; color: white; border: none; padding: 12px 24px; border-radius: 5px; cursor: pointer; font-size: 14pt; box-shadow: 0 4px 6px rgba(0,0,0,0.2); z-index: 1000; }
         .print-button:hover { background: #0052a3; }
     </style>
 </head>
 <body>
     <button class="print-button no-print" onclick="window.print()">🖨️ Print / Gem som PDF</button>
-    <div class="header">
-        <h1>${report.title}</h1>
-        <div class="version">Version ${report.version}</div>
-        <div style="margin-top: 15px;">
-            <span class="status-badge status-${report.status.toLowerCase().replace(' ', '-')}">${report.status}</span>
-        </div>
+    
+    <!-- Title Page -->
+    <div class="title-page">
+        <h1>GDPR Compliance Rapport</h1>
+        <div class="company">${companyName}</div>
+        <div class="date">${new Date().toLocaleDateString('da-DK', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
     </div>
-    <div class="metadata">
-        <div class="metadata-row">
-            <div class="metadata-item"><div class="metadata-label">Oprettet Dato</div><div class="metadata-value">${new Date(report.createdDate).toLocaleDateString('da-DK', { year: 'numeric', month: 'long', day: 'numeric' })}</div></div>
-        </div>
-        ${report.approvedBy ? `<div class="metadata-row">
-            <div class="metadata-item"><div class="metadata-label">Godkendt Af</div><div class="metadata-value">${report.approvedByName}</div></div>
-            <div class="metadata-item"><div class="metadata-label">Godkendt Dato</div><div class="metadata-value">${new Date(report.approvedDate).toLocaleDateString('da-DK', { year: 'numeric', month: 'long', day: 'numeric' })}</div></div>
-        </div>` : ''}
-        ${report.publishedDate ? `<div class="metadata-row">
-            <div class="metadata-item"><div class="metadata-label">Publiceret Dato</div><div class="metadata-value">${new Date(report.publishedDate).toLocaleDateString('da-DK', { year: 'numeric', month: 'long', day: 'numeric' })}</div></div>
-        </div>` : ''}
+    
+    <!-- Document Information -->
+    <div class="doc-info">
+        <h2>Dokumentinformation</h2>
+        <div class="doc-info-item"><span class="doc-info-label">Titel:</span> ${report.title}</div>
+        <div class="doc-info-item"><span class="doc-info-label">Version:</span> ${report.version}</div>
+        <div class="doc-info-item"><span class="doc-info-label">Status:</span> ${report.status}</div>
+        <div class="doc-info-item"><span class="doc-info-label">Oprettet dato:</span> ${new Date(report.createdDate).toLocaleDateString('da-DK', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+        ${report.approvedBy ? `<div class="doc-info-item"><span class="doc-info-label">Godkendt af:</span> ${report.approvedByName}</div>` : ''}
+        ${report.approvedDate ? `<div class="doc-info-item"><span class="doc-info-label">Godkendelsesdato:</span> ${new Date(report.approvedDate).toLocaleDateString('da-DK', { year: 'numeric', month: 'long', day: 'numeric' })}</div>` : ''}
+        ${report.publishedDate ? `<div class="doc-info-item"><span class="doc-info-label">Publiceringsdato:</span> ${new Date(report.publishedDate).toLocaleDateString('da-DK', { year: 'numeric', month: 'long', day: 'numeric' })}</div>` : ''}
+        <div class="doc-info-item"><span class="doc-info-label">Antal politikker:</span> ${report.policies.length}</div>
+        <div class="doc-info-item"><span class="doc-info-label">Completion:</span> ${report.stats.percentage}%</div>
     </div>
+    
+    <!-- Compliance Policies -->
     <div class="section">
-        <h2 class="section-title">📋 Compliance Politikker</h2>
+        <h2 class="section-title">Compliance Politikker</h2>
         ${generatePoliciesHTML(report.policies)}
     </div>
+    
+    <!-- Footer -->
     <div class="footer">
-        <p><strong>${report.title}</strong></p>
+        <p><strong>${report.title}</strong> | Version ${report.version}</p>
         <p>Genereret: ${new Date().toLocaleDateString('da-DK', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
-        <p>© ${new Date().getFullYear()} Compliance App - Alle rettigheder forbeholdes</p>
+        <p>© ${new Date().getFullYear()} ${companyName} - Fortroligt dokument - Alle rettigheder forbeholdes</p>
     </div>
 </body>
 </html>`;
@@ -284,11 +310,17 @@ function ComplianceOverview() {
 
   const generatePoliciesHTML = (policies) => {
     let html = '';
-    policies.forEach((policy, index) => {
-      html += `<div class="policy-item">
+    
+    policies.forEach((policy) => {
+      html += `
+        <div class="policy-item">
+          <div style="font-weight: bold; color: #0066cc; margin-bottom: 8px;">
+            Underkontrol ${policy.subcontrolCode}
+          </div>
           <div class="policy-content">${policy.policy}</div>
-      </div>`;
+        </div>`;
     });
+    
     return html;
   };
 
