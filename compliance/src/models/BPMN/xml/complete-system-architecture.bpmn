@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_Complete" targetNamespace="http://bpmn.io/schema/bpmn">
+  <bpmn:collaboration id="Collaboration_Complete_System">
+    <bpmn:participant id="Participant_User" name="USER" processRef="Process_User" />
+    <bpmn:participant id="Participant_WebApp" name="WEBAPP" processRef="Process_WebApp" />
+    <bpmn:participant id="Participant_Supabase" name="SUPABASE" processRef="Process_Supabase" />
+    
+    <!-- Message Flows between layers -->
+    <bpmn:messageFlow id="MsgFlow_SubmitCredentials" name="Credentials" sourceRef="Task_U3_Submit" targetRef="Task_W1_Receive" />
+    <bpmn:messageFlow id="MsgFlow_AuthRequest" name="Auth Request" sourceRef="Task_W2_Send" targetRef="Task_S1_Validate" />
+    <bpmn:messageFlow id="MsgFlow_AuthResult" name="Auth Result" sourceRef="Task_S2_Return" targetRef="Gateway_W3_Success" />
+    <bpmn:messageFlow id="MsgFlow_GDPRRequest" name="GDPR Data" sourceRef="Task_W5_LoadStructure" targetRef="Task_S3_ReturnGDPR" />
+    <bpmn:messageFlow id="MsgFlow_GDPRData" name="Policy Data" sourceRef="Task_S3_ReturnGDPR" targetRef="Task_U4_OpenWorkspace" />
+    <bpmn:messageFlow id="MsgFlow_PolicySave" name="Policy Data" sourceRef="Task_W7_SendPolicy" targetRef="Task_S4_StoreVersion" />
+  </bpmn:collaboration>
+  
+  <!-- USER Process -->
+  <bpmn:process id="Process_User" name="USER Layer" isExecutable="false">
+    <bpmn:startEvent id="Start_User" name="Start">
+      <bpmn:outgoing>Flow_U1</bpmn:outgoing>
+    </bpmn:startEvent>
+    
+    <bpmn:task id="Task_U1_OpenApp" name="Open Web App">
+      <bpmn:incoming>Flow_U1</bpmn:incoming>
+      <bpmn:outgoing>Flow_U2</bpmn:outgoing>
+    </bpmn:task>
+    
+    <bpmn:task id="Task_U2_EnterEmail" name="Enter Email + Password">
+      <bpmn:incoming>Flow_U2</bpmn:incoming>
+      <bpmn:outgoing>Flow_U3</bpmn:outgoing>
+    </bpmn:task>
+    
+    <bpmn:task id="Task_U3_Submit" name="Submit Credentials">
+      <bpmn:incoming>Flow_U3</bpmn:incoming>
+      <bpmn:outgoing>Flow_U4</bpmn:outgoing>
+    </bpmn:task>
+    
+    <bpmn:task id="Task_U4_OpenWorkspace" name="Open GDPR Workspace">
+      <bpmn:incoming>Flow_U4</bpmn:incoming>
+      <bpmn:outgoing>Flow_U5</bpmn:outgoing>
+    </bpmn:task>
+    
+    <bpmn:task id="Task_U5_EditPolicy" name="Edit Policy Text">
+      <bpmn:incoming>Flow_U5</bpmn:incoming>
+      <bpmn:outgoing>Flow_U6</bpmn:outgoing>
+    </bpmn:task>
+    
+    <bpmn:task id="Task_U6_ClickSave" name="Click Save Policy">
+      <bpmn:incoming>Flow_U6</bpmn:incoming>
+      <bpmn:outgoing>Flow_U7</bpmn:outgoing>
+    </bpmn:task>
+    
+    <bpmn:endEvent id="End_User" name="Policy Saved">
+      <bpmn:incoming>Flow_U7</bpmn:incoming>
+    </bpmn:endEvent>
+    
+    <bpmn:sequenceFlow id="Flow_U1" sourceRef="Start_User" targetRef="Task_U1_OpenApp" />
+    <bpmn:sequenceFlow id="Flow_U2" sourceRef="Task_U1_OpenApp" targetRef="Task_U2_EnterEmail" />
+    <bpmn:sequenceFlow id="Flow_U3" sourceRef="Task_U2_EnterEmail" targetRef="Task_U3_Submit" />
+    <bpmn:sequenceFlow id="Flow_U4" sourceRef="Task_U3_Submit" targetRef="Task_U4_OpenWorkspace" />
+    <bpmn:sequenceFlow id="Flow_U5" sourceRef="Task_U4_OpenWorkspace" targetRef="Task_U5_EditPolicy" />
+    <bpmn:sequenceFlow id="Flow_U6" sourceRef="Task_U5_EditPolicy" targetRef="Task_U6_ClickSave" />
+    <bpmn:sequenceFlow id="Flow_U7" sourceRef="Task_U6_ClickSave" targetRef="End_User" />
+  </bpmn:process>
+  
+  <!-- WEBAPP Process -->
+  <bpmn:process id="Process_WebApp" name="WEBAPP Layer" isExecutable="false">
+    <bpmn:task id="Task_W1_Receive" name="Receive Credentials">
+      <bpmn:outgoing>Flow_W1</bpmn:outgoing>
+    </bpmn:task>
+    
+    <bpmn:task id="Task_W2_Send" name="Send to Supabase">
+      <bpmn:incoming>Flow_W1</bpmn:incoming>
+      <bpmn:outgoing>Flow_W2</bpmn:outgoing>
+    </bpmn:task>
+    
+    <bpmn:exclusiveGateway id="Gateway_W3_Success" name="Login Successful?">
+      <bpmn:incoming>Flow_W2</bpmn:incoming>
+      <bpmn:outgoing>Flow_W3_Yes</bpmn:outgoing>
+      <bpmn:outgoing>Flow_W3_No</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    
+    <bpmn:task id="Task_W4_Error" name="Show Error Message">
+      <bpmn:incoming>Flow_W3_No</bpmn:incoming>
+    </bpmn:task>
+    
+    <bpmn:task id="Task_W5_LoadStructure" name="Load GDPR Structure + Options">
+      <bpmn:incoming>Flow_W3_Yes</bpmn:incoming>
+      <bpmn:outgoing>Flow_W5</bpmn:outgoing>
+    </bpmn:task>
+    
+    <bpmn:task id="Task_W6_SaveDraft" name="Save Draft to LocalStorage">
+      <bpmn:incoming>Flow_W5</bpmn:incoming>
+      <bpmn:outgoing>Flow_W6</bpmn:outgoing>
+    </bpmn:task>
+    
+    <bpmn:task id="Task_W7_SendPolicy" name="Send Policy to Supabase">
+      <bpmn:incoming>Flow_W6</bpmn:incoming>
+      <bpmn:outgoing>Flow_W7</bpmn:outgoing>
+    </bpmn:task>
+    
+    <bpmn:task id="Task_W8_UpdateList" name="Update Version List">
+      <bpmn:incoming>Flow_W7</bpmn:incoming>
+    </bpmn:task>
+    
+    <bpmn:sequenceFlow id="Flow_W1" sourceRef="Task_W1_Receive" targetRef="Task_W2_Send" />
+    <bpmn:sequenceFlow id="Flow_W2" sourceRef="Task_W2_Send" targetRef="Gateway_W3_Success" />
+    <bpmn:sequenceFlow id="Flow_W3_Yes" name="Yes" sourceRef="Gateway_W3_Success" targetRef="Task_W5_LoadStructure" />
+    <bpmn:sequenceFlow id="Flow_W3_No" name="No" sourceRef="Gateway_W3_Success" targetRef="Task_W4_Error" />
+    <bpmn:sequenceFlow id="Flow_W5" sourceRef="Task_W5_LoadStructure" targetRef="Task_W6_SaveDraft" />
+    <bpmn:sequenceFlow id="Flow_W6" sourceRef="Task_W6_SaveDraft" targetRef="Task_W7_SendPolicy" />
+    <bpmn:sequenceFlow id="Flow_W7" sourceRef="Task_W7_SendPolicy" targetRef="Task_W8_UpdateList" />
+  </bpmn:process>
+  
+  <!-- SUPABASE Process -->
+  <bpmn:process id="Process_Supabase" name="SUPABASE Layer" isExecutable="false">
+    <bpmn:task id="Task_S1_Validate" name="Validate Credentials">
+      <bpmn:outgoing>Flow_S1</bpmn:outgoing>
+    </bpmn:task>
+    
+    <bpmn:task id="Task_S2_Return" name="Return Auth Result">
+      <bpmn:incoming>Flow_S1</bpmn:incoming>
+    </bpmn:task>
+    
+    <bpmn:task id="Task_S3_ReturnGDPR" name="Return GDPR Data">
+      <bpmn:outgoing>Flow_S2</bpmn:outgoing>
+    </bpmn:task>
+    
+    <bpmn:task id="Task_S4_StoreVersion" name="Store Policy Version">
+      <bpmn:incoming>Flow_S2</bpmn:incoming>
+    </bpmn:task>
+    
+    <bpmn:sequenceFlow id="Flow_S1" sourceRef="Task_S1_Validate" targetRef="Task_S2_Return" />
+    <bpmn:sequenceFlow id="Flow_S2" sourceRef="Task_S3_ReturnGDPR" targetRef="Task_S4_StoreVersion" />
+  </bpmn:process>
+  
+  <!-- BPMN Diagram -->
+  <bpmndi:BPMNDiagram id="BPMNDiagram_Complete">
+    <bpmndi:BPMNPlane id="BPMNPlane_Complete" bpmnElement="Collaboration_Complete_System">
+      
+      <!-- USER Pool -->
+      <bpmndi:BPMNShape id="Participant_User_di" bpmnElement="Participant_User" isHorizontal="true">
+        <dc:Bounds x="150" y="80" width="1400" height="150" />
+      </bpmndi:BPMNShape>
+      
+      <!-- WEBAPP Pool -->
+      <bpmndi:BPMNShape id="Participant_WebApp_di" bpmnElement="Participant_WebApp" isHorizontal="true">
+        <dc:Bounds x="150" y="280" width="1400" height="200" />
+      </bpmndi:BPMNShape>
+      
+      <!-- SUPABASE Pool -->
+      <bpmndi:BPMNShape id="Participant_Supabase_di" bpmnElement="Participant_Supabase" isHorizontal="true">
+        <dc:Bounds x="150" y="530" width="1400" height="150" />
+      </bpmndi:BPMNShape>
+      
+      <!-- USER Tasks -->
+      <bpmndi:BPMNShape id="Start_User_di" bpmnElement="Start_User">
+        <dc:Bounds x="212" y="137" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_U1_di" bpmnElement="Task_U1_OpenApp">
+        <dc:Bounds x="300" y="115" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_U2_di" bpmnElement="Task_U2_EnterEmail">
+        <dc:Bounds x="450" y="115" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_U3_di" bpmnElement="Task_U3_Submit">
+        <dc:Bounds x="620" y="115" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_U4_di" bpmnElement="Task_U4_OpenWorkspace">
+        <dc:Bounds x="790" y="115" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_U5_di" bpmnElement="Task_U5_EditPolicy">
+        <dc:Bounds x="960" y="115" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_U6_di" bpmnElement="Task_U6_ClickSave">
+        <dc:Bounds x="1130" y="115" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_User_di" bpmnElement="End_User">
+        <dc:Bounds x="1302" y="137" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      
+      <!-- WEBAPP Tasks -->
+      <bpmndi:BPMNShape id="Task_W1_di" bpmnElement="Task_W1_Receive">
+        <dc:Bounds x="300" y="330" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_W2_di" bpmnElement="Task_W2_Send">
+        <dc:Bounds x="450" y="330" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_W3_di" bpmnElement="Gateway_W3_Success" isMarkerVisible="true">
+        <dc:Bounds x="605" y="345" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_W4_di" bpmnElement="Task_W4_Error">
+        <dc:Bounds x="580" y="420" width="100" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_W5_di" bpmnElement="Task_W5_LoadStructure">
+        <dc:Bounds x="710" y="330" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_W6_di" bpmnElement="Task_W6_SaveDraft">
+        <dc:Bounds x="910" y="330" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_W7_di" bpmnElement="Task_W7_SendPolicy">
+        <dc:Bounds x="1090" y="330" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_W8_di" bpmnElement="Task_W8_UpdateList">
+        <dc:Bounds x="1270" y="330" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      
+      <!-- SUPABASE Tasks -->
+      <bpmndi:BPMNShape id="Task_S1_di" bpmnElement="Task_S1_Validate">
+        <dc:Bounds x="450" y="565" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_S2_di" bpmnElement="Task_S2_Return">
+        <dc:Bounds x="605" y="565" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_S3_di" bpmnElement="Task_S3_ReturnGDPR">
+        <dc:Bounds x="790" y="565" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_S4_di" bpmnElement="Task_S4_StoreVersion">
+        <dc:Bounds x="1090" y="565" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

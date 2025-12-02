@@ -67,10 +67,10 @@ function WebApp() {
             />
             
             {/* Default Route */}
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/" element={<Navigate to="/gdpr-compliance" replace />} />
             
             {/* Catch all route */}
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            <Route path="*" element={<Navigate to="/gdpr-compliance" replace />} />
           </Routes>
         </div>
       </Router>

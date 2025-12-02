@@ -22,8 +22,8 @@ function Login() {
       if (error) {
         setError(error.message);
       } else {
-        // Login successful - navigation will be handled by AuthContext
-        navigate('/dashboard');
+        // Login successful - navigate directly to GDPR Workspace (matches BPMN diagram)
+        navigate('/gdpr-compliance');
       }
     } catch (err) {
       setError(err.message || 'Der opstod en fejl under login');
