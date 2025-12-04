@@ -257,32 +257,46 @@ export default function Udskriv() {
     window.print();
   };
 
+  const createPdfFromElement = async (element) => {
+    const pdf = new jsPDF('p', 'pt', 'a4');
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      windowWidth: element.scrollWidth,
+      windowHeight: element.scrollHeight,
+    });
+
+    const imgData = canvas.toDataURL('image/png');
+
+    const imgWidth = pageWidth; // full width
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+    let heightLeft = imgHeight;
+    let position = 0;
+
+    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, '', 'FAST');
+    heightLeft -= pageHeight;
+
+    while (heightLeft > 0) {
+      pdf.addPage();
+      position = heightLeft - imgHeight;
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, '', 'FAST');
+      heightLeft -= pageHeight;
+    }
+
+    return pdf;
+  };
+
   const generateReceiptPdf = async () => {
     const receiptElement = document.querySelector('.receipt-box');
     if (!receiptElement) {
       throw new Error('Kunne ikke finde kvitteringen på siden.');
     }
 
-    const canvas = await html2canvas(receiptElement, {
-      scale: 2,
-      useCORS: true,
-      windowWidth: receiptElement.scrollWidth,
-      windowHeight: receiptElement.scrollHeight,
-    });
-
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF('p', 'pt', 'a4');
-    const margin = 20;
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-    const scale = Math.min(
-      (pageWidth - margin * 2) / canvas.width,
-      (pageHeight - margin * 2) / canvas.height
-    );
-    const pdfWidth = canvas.width * scale;
-    const pdfHeight = canvas.height * scale;
-
-    pdf.addImage(imgData, 'PNG', margin, margin, pdfWidth, pdfHeight, '', 'FAST');
+    const pdf = await createPdfFromElement(receiptElement);
     const filename = `compliance-receipt-${Date.now()}.pdf`;
     pdf.save(filename);
   };
@@ -341,38 +355,17 @@ export default function Udskriv() {
       return;
     }
 
-    const receiptElement = document.querySelector('.receipt-box');
-    if (!receiptElement) {
-      setSendError('Kunne ikke finde kvitteringen på siden.');
-      return;
-    }
-
     try {
       setSendError('');
   setSendStatus('sending');
   setSendInfoMessage('Sender PDF ...');
+      const receiptElement = document.querySelector('.receipt-box');
+      if (!receiptElement) {
+        setSendError('Kunne ikke finde kvitteringen på siden.');
+        return;
+      }
 
-      const canvas = await html2canvas(receiptElement, {
-        scale: 2,
-        useCORS: true,
-        windowWidth: receiptElement.scrollWidth,
-        windowHeight: receiptElement.scrollHeight,
-      });
-
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'pt', 'a4');
-      const margin = 20;
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const scale = Math.min(
-        (pageWidth - margin * 2) / canvas.width,
-        (pageHeight - margin * 2) / canvas.height
-      );
-      const pdfWidth = canvas.width * scale;
-      const pdfHeight = canvas.height * scale;
-
-      pdf.addImage(imgData, 'PNG', margin, margin, pdfWidth, pdfHeight, '', 'FAST');
-
+      const pdf = await createPdfFromElement(receiptElement);
       const pdfBlob = pdf.output('blob');
       const pdfDataUrl = await blobToBase64(pdfBlob);
       const base64Payload = pdfDataUrl.replace(/^data:application\/pdf;base64,/, '');
