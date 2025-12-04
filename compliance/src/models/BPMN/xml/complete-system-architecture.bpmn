@@ -219,6 +219,126 @@
         <dc:Bounds x="1090" y="565" width="130" height="80" />
       </bpmndi:BPMNShape>
       
+      <!-- USER Flow Edges -->
+      <bpmndi:BPMNEdge id="Flow_U1_di" bpmnElement="Flow_U1">
+        <di:waypoint x="248" y="155" />
+        <di:waypoint x="300" y="155" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_U2_di" bpmnElement="Flow_U2">
+        <di:waypoint x="400" y="155" />
+        <di:waypoint x="450" y="155" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_U3_di" bpmnElement="Flow_U3">
+        <di:waypoint x="570" y="155" />
+        <di:waypoint x="620" y="155" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_U4_di" bpmnElement="Flow_U4">
+        <di:waypoint x="740" y="155" />
+        <di:waypoint x="790" y="155" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_U5_di" bpmnElement="Flow_U5">
+        <di:waypoint x="910" y="155" />
+        <di:waypoint x="960" y="155" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_U6_di" bpmnElement="Flow_U6">
+        <di:waypoint x="1080" y="155" />
+        <di:waypoint x="1130" y="155" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_U7_di" bpmnElement="Flow_U7">
+        <di:waypoint x="1250" y="155" />
+        <di:waypoint x="1302" y="155" />
+      </bpmndi:BPMNEdge>
+      
+      <!-- WEBAPP Flow Edges -->
+      <bpmndi:BPMNEdge id="Flow_W1_di" bpmnElement="Flow_W1">
+        <di:waypoint x="400" y="370" />
+        <di:waypoint x="450" y="370" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_W2_di" bpmnElement="Flow_W2">
+        <di:waypoint x="550" y="370" />
+        <di:waypoint x="605" y="370" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_W3_Yes_di" bpmnElement="Flow_W3_Yes">
+        <di:waypoint x="655" y="370" />
+        <di:waypoint x="710" y="370" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="665" y="352" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_W3_No_di" bpmnElement="Flow_W3_No">
+        <di:waypoint x="630" y="395" />
+        <di:waypoint x="630" y="420" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="638" y="405" width="15" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_W5_di" bpmnElement="Flow_W5">
+        <di:waypoint x="860" y="370" />
+        <di:waypoint x="910" y="370" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_W6_di" bpmnElement="Flow_W6">
+        <di:waypoint x="1040" y="370" />
+        <di:waypoint x="1090" y="370" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_W7_di" bpmnElement="Flow_W7">
+        <di:waypoint x="1220" y="370" />
+        <di:waypoint x="1270" y="370" />
+      </bpmndi:BPMNEdge>
+      
+      <!-- SUPABASE Flow Edges -->
+      <bpmndi:BPMNEdge id="Flow_S1_di" bpmnElement="Flow_S1">
+        <di:waypoint x="550" y="605" />
+        <di:waypoint x="605" y="605" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S2_di" bpmnElement="Flow_S2">
+        <di:waypoint x="910" y="605" />
+        <di:waypoint x="1090" y="605" />
+      </bpmndi:BPMNEdge>
+      
+      <!-- Message Flow Edges (Cross-Pool) -->
+      <bpmndi:BPMNEdge id="MsgFlow_SubmitCredentials_di" bpmnElement="MsgFlow_SubmitCredentials">
+        <di:waypoint x="680" y="195" />
+        <di:waypoint x="350" y="330" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="480" y="252" width="57" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MsgFlow_AuthRequest_di" bpmnElement="MsgFlow_AuthRequest">
+        <di:waypoint x="500" y="410" />
+        <di:waypoint x="500" y="565" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="510" y="480" width="66" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MsgFlow_AuthResult_di" bpmnElement="MsgFlow_AuthResult">
+        <di:waypoint x="655" y="565" />
+        <di:waypoint x="630" y="395" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="615" y="470" width="55" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MsgFlow_GDPRRequest_di" bpmnElement="MsgFlow_GDPRRequest">
+        <di:waypoint x="785" y="410" />
+        <di:waypoint x="850" y="565" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="795" y="480" width="60" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MsgFlow_GDPRData_di" bpmnElement="MsgFlow_GDPRData">
+        <di:waypoint x="850" y="565" />
+        <di:waypoint x="850" y="195" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="860" y="370" width="58" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MsgFlow_PolicySave_di" bpmnElement="MsgFlow_PolicySave">
+        <di:waypoint x="1155" y="410" />
+        <di:waypoint x="1155" y="565" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1165" y="480" width="58" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
 </bpmn:definitions>
