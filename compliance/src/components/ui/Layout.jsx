@@ -25,8 +25,8 @@ function Layout({ title, actions, children, fluid = false }) {
             <Nav className="me-auto">
               <Nav.Link as={NavLink} to="/dashboard">Dashboard</Nav.Link>
               <Nav.Link as={NavLink} to="/gdpr-compliance">GDPR Compliance</Nav.Link>
-              <Nav.Link as={NavLink} to="/compliance-overview">Compliance Oversigt</Nav.Link>
-              <Nav.Link as={NavLink} to="/reports">Alle Rapporter</Nav.Link>
+              <Nav.Link as={NavLink} to="/compliance-overview">Compliance Overview</Nav.Link>
+              <Nav.Link as={NavLink} to="/reports">All Reports</Nav.Link>
             </Nav>
             <Nav className="ms-auto align-items-center">
               {user && (
