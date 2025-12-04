@@ -26,7 +26,7 @@ function Login() {
         navigate('/dashboard');
       }
     } catch (err) {
-      setError(err.message || 'Der opstod en fejl under login');
+      setError(err.message || 'An error occurred during login');
     } finally {
       setLoading(false);
     }
@@ -39,8 +39,8 @@ function Login() {
           <Card className="shadow">
             <Card.Body className="p-4">
               <div className="text-center mb-4">
-                <h2 className="fw-bold">Log ind</h2>
-                <p className="text-muted">Velkommen tilbage til Compliance App</p>
+                <h2 className="fw-bold">Log in</h2>
+                <p className="text-muted">Welcome back to Compliance App</p>
               </div>
 
               {error && (
@@ -51,10 +51,10 @@ function Login() {
 
               <Form onSubmit={handleLogin}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Email adresse</Form.Label>
+                  <Form.Label>Email address</Form.Label>
                   <Form.Control
                     type="email"
-                    placeholder="Indtast din email"
+                    placeholder="Enter your email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -63,10 +63,10 @@ function Login() {
                 </Form.Group>
 
                 <Form.Group className="mb-3">
-                  <Form.Label>Adgangskode</Form.Label>
+                  <Form.Label>Password</Form.Label>
                   <Form.Control
                     type="password"
-                    placeholder="Indtast din adgangskode"
+                    placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
@@ -80,15 +80,15 @@ function Login() {
                   className="w-100 mb-3"
                   disabled={loading}
                 >
-                  {loading ? 'Logger ind...' : 'Log ind'}
+                  {loading ? 'Logging in...' : 'Log in'}
                 </Button>
               </Form>
 
               <div className="text-center">
                 <p className="mb-0">
-                  Har du ikke en konto?{' '}
+                  Don't have an account?{' '}
                   <Link to="/register" className="text-decoration-none">
-                    Opret konto her
+                    Create an account here
                   </Link>
                 </p>
               </div>

@@ -21,15 +21,15 @@ function Register() {
     setError('');
     setSuccess('');
 
-    // Validering
+    // Validation
     if (password !== confirmPassword) {
-      setError('Adgangskoderne matcher ikke');
+      setError('Passwords do not match');
       setLoading(false);
       return;
     }
 
     if (password.length < 6) {
-      setError('Adgangskoden skal være mindst 6 karakterer');
+      setError('Password must be at least 6 characters');
       setLoading(false);
       return;
     }
@@ -43,7 +43,7 @@ function Register() {
       if (error) {
         setError(error.message);
       } else {
-        setSuccess('Konto oprettet! Tjek din email for at bekræfte kontoen.');
+        setSuccess('Account created! Check your email to confirm your account.');
         // Optionally redirect to login after a few seconds
         setTimeout(() => {
           navigate('/login');
@@ -51,7 +51,7 @@ function Register() {
       }
     } catch (err) {
       console.error('Registration error:', err);
-      setError('Der opstod en fejl under registrering');
+      setError('An error occurred during registration');
     } finally {
       setLoading(false);
     }
@@ -64,8 +64,8 @@ function Register() {
           <Card className="shadow">
             <Card.Body className="p-4">
               <div className="text-center mb-4">
-                <h2 className="fw-bold">Opret konto</h2>
-                <p className="text-muted">Tilmeld dig Compliance App</p>
+                <h2 className="fw-bold">Create account</h2>
+                <p className="text-muted">Join the Compliance App</p>
               </div>
 
               {error && (
@@ -82,10 +82,10 @@ function Register() {
 
               <Form onSubmit={handleRegister}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Fulde navn</Form.Label>
+                  <Form.Label>Full name</Form.Label>
                   <Form.Control
                     type="text"
-                    placeholder="Indtast dit fulde navn"
+                    placeholder="Enter your full name"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     required
@@ -94,10 +94,10 @@ function Register() {
                 </Form.Group>
 
                 <Form.Group className="mb-3">
-                  <Form.Label>Email adresse</Form.Label>
+                  <Form.Label>Email address</Form.Label>
                   <Form.Control
                     type="email"
-                    placeholder="Indtast din email"
+                    placeholder="Enter your email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -106,24 +106,24 @@ function Register() {
                 </Form.Group>
 
                 <Form.Group className="mb-3">
-                  <Form.Label>Firma navn</Form.Label>
+                  <Form.Label>Company name</Form.Label>
                   <Form.Control
                     type="text"
-                    placeholder="Indtast dit firmas navn (valgfrit)"
+                    placeholder="Enter your company name (optional)"
                     value={companyName}
                     onChange={(e) => setCompanyName(e.target.value)}
                     autoComplete="organization"
                   />
                   <Form.Text className="text-muted">
-                    Hvis du opretter en konto for dit firma, kan du indtaste firmaets navn her.
+                    If you are creating an account for your company, you can enter the company name here.
                   </Form.Text>
                 </Form.Group>
 
                 <Form.Group className="mb-3">
-                  <Form.Label>Adgangskode</Form.Label>
+                  <Form.Label>Password</Form.Label>
                   <Form.Control
                     type="password"
-                    placeholder="Indtast din adgangskode (min. 6 karakterer)"
+                    placeholder="Enter your password (min. 6 characters)"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
@@ -133,10 +133,10 @@ function Register() {
                 </Form.Group>
 
                 <Form.Group className="mb-3">
-                  <Form.Label>Bekræft adgangskode</Form.Label>
+                  <Form.Label>Confirm password</Form.Label>
                   <Form.Control
                     type="password"
-                    placeholder="Gentag din adgangskode"
+                    placeholder="Repeat your password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
@@ -150,15 +150,15 @@ function Register() {
                   className="w-100 mb-3"
                   disabled={loading}
                 >
-                  {loading ? 'Opretter konto...' : 'Opret konto'}
+                  {loading ? 'Creating account...' : 'Create account'}
                 </Button>
               </Form>
 
               <div className="text-center">
                 <p className="mb-0">
-                  Har du allerede en konto?{' '}
+                  Already have an account?{' '}
                   <Link to="/login" className="text-decoration-none">
-                    Log ind her
+                    Log in here
                   </Link>
                 </p>
               </div>
