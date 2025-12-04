@@ -257,7 +257,43 @@ export default function Udskriv() {
     window.print();
   };
 
-  const handleMail = () => {
+  const generateReceiptPdf = async () => {
+    const receiptElement = document.querySelector('.receipt-box');
+    if (!receiptElement) {
+      throw new Error('Kunne ikke finde kvitteringen på siden.');
+    }
+
+    const canvas = await html2canvas(receiptElement, {
+      scale: 2,
+      useCORS: true,
+      windowWidth: receiptElement.scrollWidth,
+      windowHeight: receiptElement.scrollHeight,
+    });
+
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF('p', 'pt', 'a4');
+    const margin = 20;
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const scale = Math.min(
+      (pageWidth - margin * 2) / canvas.width,
+      (pageHeight - margin * 2) / canvas.height
+    );
+    const pdfWidth = canvas.width * scale;
+    const pdfHeight = canvas.height * scale;
+
+    pdf.addImage(imgData, 'PNG', margin, margin, pdfWidth, pdfHeight, '', 'FAST');
+    const filename = `compliance-receipt-${Date.now()}.pdf`;
+    pdf.save(filename);
+  };
+
+  const handleMail = async () => {
+    try {
+      await generateReceiptPdf();
+    } catch (err) {
+      console.error('Kunne ikke generere PDF til mail:', err);
+    }
+
     const subject = encodeURIComponent('Compliance Receipt');
     const lines = [
       'Hej,',
@@ -290,7 +326,6 @@ export default function Udskriv() {
 
     const body = encodeURIComponent(lines.join('\n'));
 
-    // Opens the default mail client. Note: Attaching a generated PDF requires a backend or user to attach manually.
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
   };
 
@@ -435,7 +470,7 @@ export default function Udskriv() {
 
         <div className="btn-row no-print">
           <button className="print-btn" onClick={handlePrint}>Udskriv</button>
-          <button className="export-btn" onClick={handleMail}>Export PDF to Mail</button>
+          <button className="export-btn" onClick={handleMail}>Download pdf</button>
         </div>
 
         <div className="email-send no-print">
