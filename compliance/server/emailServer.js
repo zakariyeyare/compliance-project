@@ -9,7 +9,7 @@ dotenv.config();
 const env = globalThis?.process?.env ?? {};
 
 const app = express();
-const PORT = env.EMAIL_SERVER_PORT || 4000;
+const PORT = env.EMAIL_SERVER_PORT || 4100;
 const allowedOrigins = env.EMAIL_ALLOWED_ORIGINS
   ? env.EMAIL_ALLOWED_ORIGINS.split(',').map((origin) => origin.trim()).filter(Boolean)
   : null;

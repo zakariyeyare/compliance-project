@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import Supabase from '../SupabaseClient';
-import AuthContext from './AuthContextBase';
+import { AuthContext } from './AuthContextBase';
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
