@@ -46,20 +46,8 @@ function Dashboard() {
         <Row>
           <Col md={4} className="mb-4">
             <CustomCard
-              title="Choose Compliance"
+              title="prepare GDPR Compliance"
               onClick={handleChooseCompliance}
-            />
-          </Col>
-          <Col md={4} className="mb-4">
-            <CustomCard
-              title="All Reports"
-              onClick={() => navigate('/reports')}
-            />
-          </Col>
-          <Col md={4} className="mb-4">
-            <CustomCard
-              title="Settings"
-              onClick={() => alert('Settings clicked')}
             />
           </Col>
         </Row>
